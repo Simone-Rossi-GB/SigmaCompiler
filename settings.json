@@ -1,0 +1,541 @@
+{
+  // ========================================
+  // 🦀 RUST SPECIFIC SETTINGS
+  // ========================================
+  
+  // Rust Analyzer
+  "rust-analyzer.checkOnSave.command": "clippy",
+  "rust-analyzer.checkOnSave.allTargets": true,
+  "rust-analyzer.cargo.allFeatures": true,
+  "rust-analyzer.inlayHints.enable": true,
+  "rust-analyzer.inlayHints.chainingHints": true,
+  "rust-analyzer.inlayHints.parameterHints": true,
+  "rust-analyzer.inlayHints.typeHints": true,
+  "rust-analyzer.lens.enable": true,
+  "rust-analyzer.lens.run": true,
+  "rust-analyzer.lens.debug": true,
+  "rust-analyzer.hover.actions.enable": true,
+  "rust-analyzer.completion.autoimport.enable": true,
+  "rust-analyzer.completion.autoself.enable": true,
+  
+  // Rust formatting
+  "[rust]": {
+    "editor.defaultFormatter": "rust-lang.rust-analyzer",
+    "editor.formatOnSave": true,
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true
+  },
+  
+  // TOML formatting
+  "[toml]": {
+    "editor.defaultFormatter": "tamasfe.even-better-toml",
+    "editor.formatOnSave": true
+  },
+
+  // ========================================
+  // ✏️ WRITING EXPERIENCE
+  // ========================================
+  
+  // Auto-closing & Auto-pairing
+  "editor.autoClosingBrackets": "always",
+  "editor.autoClosingQuotes": "always",
+  "editor.autoClosingOvertype": "always",
+  "editor.autoSurround": "languageDefined",
+  "editor.autoClosingDelete": "always",
+  
+  // Bracket colorization (native feature)
+  "editor.bracketPairColorization.enabled": true,
+  "editor.guides.bracketPairs": "active",
+  "editor.guides.bracketPairsHorizontal": "active",
+  "editor.guides.highlightActiveIndentation": true,
+  
+  // Matching brackets
+  "editor.matchBrackets": "always",
+  
+  // Snippets & Suggestions
+  "editor.snippetSuggestions": "top",
+  "editor.tabCompletion": "on",
+  "editor.suggest.preview": true,
+  "editor.suggest.showWords": true,
+  "editor.quickSuggestions": {
+    "other": true,
+    "comments": false,
+    "strings": true
+  },
+  "editor.suggestSelection": "first",
+  "editor.acceptSuggestionOnCommitCharacter": true,
+  "editor.acceptSuggestionOnEnter": "on",
+  
+  // IntelliSense
+  "editor.parameterHints.enabled": true,
+  "editor.hover.enabled": true,
+  "editor.hover.delay": 300,
+  
+  // Auto-formatting
+  "editor.formatOnSave": true,
+  "editor.formatOnPaste": true,
+  "editor.formatOnType": false,
+  "editor.codeActionsOnSave": {
+    "source.fixAll": "explicit",
+    "source.organizeImports": "explicit"
+  },
+
+  // ========================================
+  // 🎨 VISUAL & APPEARANCE
+  // ========================================
+  
+  // Font & Ligatures
+  "editor.fontFamily": "'Fira Code', 'JetBrains Mono', 'Cascadia Code', Consolas, 'Courier New', monospace",
+  "editor.fontSize": 14,
+  "editor.fontLigatures": true,
+  "editor.fontWeight": "400",
+  "editor.lineHeight": 1.6,
+  "editor.letterSpacing": 0.5,
+  
+  // Cursor
+  "editor.cursorBlinking": "smooth",
+  "editor.cursorSmoothCaretAnimation": "on",
+  "editor.cursorStyle": "line",
+  "editor.cursorWidth": 2,
+  
+  // Rendering
+  "editor.smoothScrolling": true,
+  "editor.renderWhitespace": "boundary",
+  "editor.renderLineHighlight": "all",
+  "editor.renderControlCharacters": false,
+  "editor.renderIndentGuides": true,
+  "editor.highlightActiveIndentGuide": true,
+  
+  // Minimap
+  "editor.minimap.enabled": true,
+  "editor.minimap.renderCharacters": false,
+  "editor.minimap.maxColumn": 80,
+  "editor.minimap.showSlider": "always",
+  
+  // Theme (scegli quello che preferisci)
+  "workbench.colorTheme": "One Dark Pro Darker",
+  "workbench.iconTheme": "material-icon-theme",
+  "workbench.productIconTheme": "material-product-icons",
+  
+  // Color customizations
+  "workbench.colorCustomizations": {
+    "editorBracketHighlight.foreground1": "#ffd700",
+    "editorBracketHighlight.foreground2": "#da70d6",
+    "editorBracketHighlight.foreground3": "#87cefa",
+    "editorBracketHighlight.foreground4": "#fa8072",
+    "editorBracketHighlight.foreground5": "#7cfc00",
+    "editorBracketHighlight.foreground6": "#ff8c00"
+  },
+
+  // ========================================
+  // 🔍 ERROR LENS & DIAGNOSTICS
+  // ========================================
+  
+  "errorLens.enabled": true,
+  "errorLens.enabledDiagnosticLevels": ["error", "warning", "info", "hint"],
+  "errorLens.fontSize": "0.9em",
+  "errorLens.fontWeight": "normal",
+  "errorLens.messageMaxChars": 500,
+  "errorLens.severityText": ["ERROR", "WARNING", "INFO", "HINT"],
+  "errorLens.gutterIconsEnabled": true,
+  "errorLens.gutterIconSize": "100%",
+  
+  // Problems
+  "problems.decorations.enabled": true,
+  "problems.showCurrentInStatus": true,
+
+  // ========================================
+  // 🌈 TODO TREE
+  // ========================================
+  
+  "todo-tree.general.tags": [
+    "TODO",
+    "FIXME",
+    "HACK",
+    "NOTE",
+    "BUG",
+    "XXX",
+    "REVIEW",
+    "OPTIMIZE"
+  ],
+  "todo-tree.highlights.defaultHighlight": {
+    "icon": "alert",
+    "type": "text",
+    "foreground": "#ffffff",
+    "opacity": 50
+  },
+  "todo-tree.highlights.customHighlight": {
+    "TODO": {
+      "icon": "check",
+      "iconColour": "#ffd700",
+      "foreground": "#000000",
+      "background": "#ffd700"
+    },
+    "FIXME": {
+      "icon": "bug",
+      "iconColour": "#ff6b6b",
+      "foreground": "#ffffff",
+      "background": "#ff6b6b"
+    },
+    "HACK": {
+      "icon": "tools",
+      "iconColour": "#ff8c00",
+      "foreground": "#000000",
+      "background": "#ff8c00"
+    },
+    "NOTE": {
+      "icon": "note",
+      "iconColour": "#87cefa",
+      "foreground": "#000000",
+      "background": "#87cefa"
+    },
+    "BUG": {
+      "icon": "bug",
+      "iconColour": "#ff0000",
+      "foreground": "#ffffff",
+      "background": "#ff0000"
+    }
+  },
+  "todo-tree.general.showActivityBarBadge": true,
+  "todo-tree.tree.showCountsInTree": true,
+
+  // ========================================
+  // 💬 BETTER COMMENTS
+  // ========================================
+  
+  "better-comments.tags": [
+    {
+      "tag": "!",
+      "color": "#FF2D00",
+      "strikethrough": false,
+      "underline": false,
+      "backgroundColor": "transparent",
+      "bold": false,
+      "italic": false
+    },
+    {
+      "tag": "?",
+      "color": "#3498DB",
+      "strikethrough": false,
+      "underline": false,
+      "backgroundColor": "transparent",
+      "bold": false,
+      "italic": false
+    },
+    {
+      "tag": "//",
+      "color": "#474747",
+      "strikethrough": true,
+      "underline": false,
+      "backgroundColor": "transparent",
+      "bold": false,
+      "italic": false
+    },
+    {
+      "tag": "todo",
+      "color": "#FF8C00",
+      "strikethrough": false,
+      "underline": false,
+      "backgroundColor": "transparent",
+      "bold": false,
+      "italic": false
+    },
+    {
+      "tag": "*",
+      "color": "#98C379",
+      "strikethrough": false,
+      "underline": false,
+      "backgroundColor": "transparent",
+      "bold": false,
+      "italic": false
+    }
+  ],
+
+  // ========================================
+  // 🎯 INDENT RAINBOW
+  // ========================================
+  
+  "indentRainbow.colors": [
+    "rgba(255,215,0,0.1)",
+    "rgba(218,112,214,0.1)",
+    "rgba(135,206,250,0.1)",
+    "rgba(250,128,114,0.1)",
+    "rgba(124,252,0,0.1)"
+  ],
+  "indentRainbow.errorColor": "rgba(255,0,0,0.3)",
+  "indentRainbow.tabmixColor": "rgba(255,165,0,0.3)",
+
+  // ========================================
+  // 📝 FILE MANAGEMENT
+  // ========================================
+  
+  "files.autoSave": "afterDelay",
+  "files.autoSaveDelay": 1000,
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+  "files.trimFinalNewlines": true,
+  "files.eol": "\n",
+  "files.encoding": "utf8",
+  
+  // Exclude files from explorer
+  "files.exclude": {
+    "**/.git": true,
+    "**/.svn": true,
+    "**/.hg": true,
+    "**/CVS": true,
+    "**/.DS_Store": true,
+    "**/Thumbs.db": true,
+    "**/target": true,
+    "**/.vscode": false
+  },
+  
+  // Search exclusions
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/bower_components": true,
+    "**/target": true,
+    "**/*.code-search": true
+  },
+
+  // ========================================
+  // 🔍 GITLENS
+  // ========================================
+  
+  "gitlens.currentLine.enabled": true,
+  "gitlens.currentLine.pullRequests.enabled": true,
+  "gitlens.hovers.currentLine.over": "line",
+  "gitlens.codeLens.enabled": true,
+  "gitlens.codeLens.authors.enabled": true,
+  "gitlens.codeLens.recentChange.enabled": true,
+  "gitlens.statusBar.enabled": true,
+  "gitlens.blame.highlight.enabled": true,
+  "gitlens.blame.avatars": true,
+  "gitlens.blame.format": "${author|10} ${ago|14-}",
+
+  // ========================================
+  // 🖥️ TERMINAL
+  // ========================================
+  
+  "terminal.integrated.fontFamily": "'Fira Code', 'JetBrains Mono', 'Cascadia Code', monospace",
+  "terminal.integrated.fontSize": 13,
+  "terminal.integrated.lineHeight": 1.2,
+  "terminal.integrated.fontWeight": "normal",
+  "terminal.integrated.fontWeightBold": "bold",
+  "terminal.integrated.cursorBlinking": true,
+  "terminal.integrated.cursorStyle": "line",
+  "terminal.integrated.smoothScrolling": true,
+  "terminal.integrated.defaultLocation": "editor",
+  "terminal.integrated.tabs.enabled": true,
+  "terminal.integrated.tabs.showActiveTerminal": "always",
+  "terminal.integrated.tabs.showActions": "always",
+  "terminal.integrated.copyOnSelection": true,
+  "terminal.integrated.rightClickBehavior": "default",
+  
+  // Terminal colors (optional - adapts to your theme)
+  "terminal.integrated.minimumContrastRatio": 4.5,
+
+  // ========================================
+  // 🚀 CODE RUNNER
+  // ========================================
+  
+  "code-runner.runInTerminal": true,
+  "code-runner.clearPreviousOutput": true,
+  "code-runner.saveFileBeforeRun": true,
+  "code-runner.preserveFocus": false,
+  "code-runner.executorMap": {
+    "rust": "cd $dir && rustc $fileName && $dir$fileNameWithoutExt",
+    "python": "python -u",
+    "javascript": "node",
+    "typescript": "ts-node"
+  },
+
+  // ========================================
+  // 📊 COVERAGE GUTTERS
+  // ========================================
+  
+  "coverage-gutters.showLineCoverage": true,
+  "coverage-gutters.showRulerCoverage": true,
+  "coverage-gutters.coverageFileNames": [
+    "lcov.info",
+    "cov.xml",
+    "coverage.xml",
+    "jacoco.xml",
+    "coverage.json"
+  ],
+
+  // ========================================
+  // 🎁 MISCELLANEOUS PRODUCTIVITY
+  // ========================================
+  
+  // Breadcrumbs
+  "breadcrumbs.enabled": true,
+  "breadcrumbs.symbolPath": "on",
+  
+  // Explorer
+  "explorer.confirmDelete": false,
+  "explorer.confirmDragAndDrop": false,
+  "explorer.compactFolders": false,
+  
+  // Workbench
+  "workbench.startupEditor": "welcomePage",
+  "workbench.editor.enablePreview": false,
+  "workbench.editor.closeOnFileDelete": true,
+  "workbench.editor.highlightModifiedTabs": true,
+  "workbench.editor.limit.enabled": true,
+  "workbench.editor.limit.value": 10,
+  "workbench.list.smoothScrolling": true,
+  "workbench.tree.indent": 20,
+  "workbench.sideBar.location": "left",
+  "workbench.panel.defaultLocation": "right",
+  
+  // Zen mode
+  "zenMode.centerLayout": true,
+  "zenMode.fullScreen": false,
+  "zenMode.hideLineNumbers": false,
+  "zenMode.restore": true,
+  
+  // Diff editor
+  "diffEditor.ignoreTrimWhitespace": false,
+  "diffEditor.renderSideBySide": true,
+  
+  // Security
+  "security.workspace.trust.untrustedFiles": "open",
+  
+  // Telemetry
+  "telemetry.telemetryLevel": "off",
+  
+  // Update settings
+  "update.mode": "default",
+  "extensions.autoUpdate": true,
+  "extensions.autoCheckUpdates": true,
+
+  // ========================================
+  // 🔤 SPELL CHECKER
+  // ========================================
+  
+  "cSpell.enabled": true,
+  "cSpell.language": "en,it",
+  "cSpell.userWords": [
+    "Rustover",
+    "rustc",
+    "clippy",
+    "struct",
+    "enum",
+    "impl",
+    "tokio",
+    "async",
+    "await"
+  ],
+  "cSpell.enableFiletypes": [
+    "rust",
+    "toml",
+    "markdown"
+  ],
+
+  // ========================================
+  // 🎯 BETTER ALIGN
+  // ========================================
+  
+  "alignment.chars": {
+    "=": {
+      "spaceBefore": 1,
+      "spaceAfter": 1
+    },
+    ":": {
+      "spaceBefore": 0,
+      "spaceAfter": 1
+    },
+    "=>": {
+      "spaceBefore": 1,
+      "spaceAfter": 1
+    },
+    "//": {
+      "spaceBefore": 1,
+      "spaceAfter": 1
+    }
+  },
+
+  // ========================================
+  // 🌐 WAKATIME (optional - requires account)
+  // ========================================
+  
+  "wakatime.showStatusBar": true,
+
+  // ========================================
+  // 🎨 PEACOCK (per workspace diversi)
+  // ========================================
+  
+  "peacock.favoriteColors": [
+    {
+      "name": "Rust Orange",
+      "value": "#ff7043"
+    },
+    {
+      "name": "Ocean Blue",
+      "value": "#1976d2"
+    },
+    {
+      "name": "Forest Green",
+      "value": "#388e3c"
+    },
+    {
+      "name": "Violet",
+      "value": "#7b1fa2"
+    },
+    {
+      "name": "Yellow",
+      "value": "#fbc02d"
+    }
+  ],
+
+  // ========================================
+  // ⚙️ ADVANCED SETTINGS
+  // ========================================
+  
+  // Performance
+  "files.watcherExclude": {
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/node_modules/**": true,
+    "**/target/**": true
+  },
+  
+  // IntelliSense cache
+  "typescript.disableAutomaticTypeAcquisition": false,
+  
+  // Language specific
+  "emmet.includeLanguages": {
+    "rust": "html"
+  },
+  
+  // Window
+  "window.zoomLevel": 0,
+  "window.title": "${dirty}${activeEditorShort}${separator}${rootName}${separator}${profileName}",
+  "window.newWindowDimensions": "inherit",
+  "window.restoreWindows": "all",
+  
+  // Debug
+  "debug.console.fontSize": 13,
+  "debug.console.lineHeight": 18,
+  "debug.internalConsoleOptions": "openOnSessionStart",
+  "debug.openDebug": "openOnDebugBreak",
+  "debug.showBreakpointsInOverviewRuler": true,
+
+  // ========================================
+  // 🎬 FINAL TOUCHES
+  // ========================================
+  
+  // Sticky scroll (mostra sempre il contesto corrente)
+  "editor.stickyScroll.enabled": true,
+  "editor.stickyScroll.maxLineCount": 5,
+  
+  // Inlay hints
+  "editor.inlayHints.enabled": "onUnlessPressed",
+  
+  // Mouse wheel zoom
+  "editor.mouseWheelZoom": false,
+  
+  // Multi-cursor
+  "editor.multiCursorModifier": "ctrlCmd",
+  "editor.multiCursorPaste": "spread"
+}

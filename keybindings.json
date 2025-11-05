@@ -1,0 +1,140 @@
+[
+  // ========================================
+  // 🚀 CUSTOM KEYBINDINGS
+  // ========================================
+  
+  // Quick terminal toggle
+  {
+    "key": "ctrl+`",
+    "command": "workbench.action.terminal.toggleTerminal"
+  },
+  
+  // Split terminal right
+  {
+    "key": "ctrl+shift+`",
+    "command": "workbench.action.terminal.split"
+  },
+  
+  // Better Align
+  {
+    "key": "ctrl+alt+a",
+    "command": "wwm.aligncode",
+    "when": "editorTextFocus"
+  },
+  
+  // Toggle Quotes
+  {
+    "key": "ctrl+'",
+    "command": "editor.action.changeQuotes",
+    "when": "editorTextFocus"
+  },
+  
+  // Expand Region
+  {
+    "key": "ctrl+w",
+    "command": "expand_region",
+    "when": "editorTextFocus"
+  },
+  {
+    "key": "ctrl+shift+w",
+    "command": "undo_expand_region",
+    "when": "editorTextFocus"
+  },
+  
+  // Jumpy (quick navigation)
+  {
+    "key": "ctrl+j",
+    "command": "extension.jumpy-word",
+    "when": "editorTextFocus"
+  },
+  
+  // Sort lines
+  {
+    "key": "ctrl+alt+s",
+    "command": "editor.action.sortLinesAscending",
+    "when": "editorTextFocus"
+  },
+  
+  // Change case
+  {
+    "key": "ctrl+alt+c",
+    "command": "extension.changeCase.commands",
+    "when": "editorTextFocus"
+  },
+  
+  // Toggle TODO Tree
+  {
+    "key": "ctrl+alt+t",
+    "command": "todo-tree-view.focus"
+  },
+  
+  // CodeSnap (take screenshot)
+  {
+    "key": "ctrl+alt+p",
+    "command": "codesnap.start"
+  },
+  
+  // Git Graph
+  {
+    "key": "ctrl+alt+g",
+    "command": "git-graph.view"
+  },
+  
+  // Rust: Run current file
+  {
+    "key": "ctrl+alt+r",
+    "command": "rust-analyzer.run",
+    "when": "editorLangId == rust"
+  },
+  
+  // Rust: Debug current file
+  {
+    "key": "ctrl+alt+d",
+    "command": "rust-analyzer.debug",
+    "when": "editorLangId == rust"
+  },
+  
+  // Rust: Expand macro recursively
+  {
+    "key": "ctrl+alt+m",
+    "command": "rust-analyzer.expandMacro",
+    "when": "editorLangId == rust"
+  },
+  
+  // Peacock: Change color
+  {
+    "key": "ctrl+alt+p",
+    "command": "peacock.changeColorToRandom"
+  },
+  
+  // Duplicate line down (like IntelliJ)
+  {
+    "key": "ctrl+d",
+    "command": "editor.action.copyLinesDownAction",
+    "when": "editorTextFocus && !editorReadonly"
+  },
+  
+  // Comment line (like IntelliJ)
+  {
+    "key": "ctrl+shift+/",
+    "command": "editor.action.commentLine",
+    "when": "editorTextFocus && !editorReadonly"
+  },
+  
+  // Delete line (enhanced)
+  {
+    "key": "ctrl+y",
+    "command": "editor.action.deleteLines",
+    "when": "editorTextFocus && !editorReadonly"
+  },
+  
+  // Move to next/previous error
+  {
+    "key": "f8",
+    "command": "editor.action.marker.next"
+  },
+  {
+    "key": "shift+f8",
+    "command": "editor.action.marker.prev"
+  }
+]
