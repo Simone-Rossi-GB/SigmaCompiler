@@ -1,0 +1,1 @@
+/Users/simo/SigmaCompiler/target/debug/sigma: /Users/simo/SigmaCompiler/src/compiler.rs /Users/simo/SigmaCompiler/src/lexer/chunker.rs /Users/simo/SigmaCompiler/src/lexer/mod.rs /Users/simo/SigmaCompiler/src/lexer/tokenizer.rs /Users/simo/SigmaCompiler/src/main.rs

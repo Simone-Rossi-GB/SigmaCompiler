@@ -1,0 +1,869 @@
+Perfetto! Vedo che hai già una struttura base del progetto con le cartelle principali. Hai il main.rs quasi vuoto e le cartelle per lexer, parser, semantic, codegen, error, e utils.
+
+🔥 PARTE 1: NOMI BRAINROT PER I COSTRUTTI DEL LINGUAGGIO SIGMA
+Ecco i miei suggerimenti in tema Gen Z / brainrot:
+
+Parole chiave principali:
+
+rizz - dichiarare una funzione (perché hai rizz = hai skill)
+cap / nocap - boolean true/false (cap = bugia, nocap = verità)
+bussin - return (quando qualcosa è bussin = è fire)
+flex - print/output (mostri qualcosa)
+vibe - variabile
+based - let/const (dichiarazione variabile immutabile)
+mid - null/undefined
+fr - if statement (for real = davvero, condizione)
+ong - else (on god = giuro)
+lowkey - while loop (tipo "piano piano")
+highkey - for loop (tipo "proprio tanto")
+bet - break
+fax - continue
+slay - success/ok status
+L - error/failure
+W - win/success in return
+ratio - comparison operator (>)
+caught - try-catch error handling
+ded - terminate/exit
+ngl - comment (not gonna lie = commento sincero)
+sheesh - import/include
+sus - unsafe operation
+sigma - class/struct (ovviamente!)
+ohio - exception/panic (perché Ohio è cursed)
+skibidi - namespace/module
+gyat - getter (get that)
+mew o mewing - private/encapsulation
+aura - public visibility
+cooked - compilation error
+Tipi di dati:
+whole - integer
+real - float
+fax - string
+vibes - array
+drip - object/struct
+
+📚 PARTE 2: GUIDA PASSO-PASSO PER CREARE IL TUO COMPILATORE
+
+Vedo che hai già le cartelle. Ti spiego l'ordine logico e cosa fare in ogni fase:
+
+FASE 1: IL LEXER (Tokenizzazione)
+
+📂 Cartella: src/lexer/ Cosa devi fare:
+
+Crea un file mod.rs nel folder lexer
+
+Crea un file token.rs dove definisci tutti i tuoi token (le parole chiave brainrot)
+
+Nel token.rs dovrai:
+
+Creare un enum Token con tutte le varianti (Rizz, Cap, NoCap, Bussin, etc.)
+
+Creare una struct TokenWithSpan che contiene il token + la posizione nel file sorgente
+
+Crea lexer.rs dove implementi il lexer vero e proprio che:
+
+Prende una stringa di codice Sigma in input
+
+La scansiona carattere per carattere
+
+Riconosce le parole chiave, numeri, identificatori, operatori
+
+Restituisce un Vec di Token
+
+Esempio logica:
+Input: "based x = 5"
+Output: [Token::Based, Token::Identifier("x"), Token::Equals, Token::Number(5)]
+
+🎯 COS'È UN LEXER (ANALIZZATORE LESSICALE)?
+Il lexer è il primo componente di un compilatore. Il suo lavoro è molto semplice ma fondamentale: Trasforma una stringa di testo in una lista di TOKEN
+Analogia della vita reale:
+Immagina di leggere questa frase italiana:
+"Il gatto mangia il pesce"
+Il tuo cervello automaticamente la divide in:
+[Il] [gatto] [mangia] [il] [pesce]
+Il lexer fa la stessa cosa con il codice!
+
+📚 CONCETTI DA IMPARARE
+1. TOKEN
+Un token è un "pezzo significativo" di codice. Può essere:
+Una keyword (parola riservata): based, rizz, flex, bussin
+Un identificatore (nome di variabile): x, mioNumero, calcola
+Un numero: 42, 3.14
+Un operatore: +, -, =, ratio (>)
+Un delimitatore: (, ), {, }, ;
+Una stringa: "ciao"
+2. SCANNING (scansione)
+Il lexer legge il codice carattere per carattere e decide:
+"Questo carattere fa parte di un numero?"
+"Questa sequenza di lettere è una keyword o un nome di variabile?"
+"Questo spazio bianco va ignorato?"
+🛠️ COME FUNZIONA IL LEXER (STEP BY STEP)
+Prendiamo questo codice Sigma:
+based x = 42
+flex x
+PASSO 1: Input
+Il lexer riceve la stringa grezza:
+"based x = 42\nflex x"
+PASSO 2: Scanning carattere per carattere
+Il lexer ha un puntatore che si muove nella stringa:
+b a s e d   x   =   4 2 \n f l e x   x
+^
+position = 0
+Cosa fa:
+Legge b → è una lettera! Inizia a leggere un identificatore
+Continua: ba, bas, base, based
+Arriva allo spazio → STOP! Ha completato la parola "based"
+Controlla: "based" è una keyword? SÌ!
+Crea il token: Token::Based
+Poi salta lo spazio e continua:
+b a s e d   x   =   4 2 \n f l e x   x
+            ^
+position = 6
+Legge x → è una lettera
+Arriva allo spazio → STOP!
+"x" non è una keyword → è un identificatore
+Crea il token: Token::Identifier("x")
+Continua:
+b a s e d   x   =   4 2 \n f l e x   x
+                ^
+position = 10
+Legge = → è un operatore!
+Crea il token: Token::Equals
+b a s e d   x   =   4 2 \n f l e x   x
+                    ^
+position = 12
+Legge 4 → è una cifra! Inizia a leggere un numero
+Continua: 42
+Arriva a \n (newline) → STOP!
+Crea il token: Token::Number(42)
+E così via...
+PASSO 3: Output finale
+Il lexer produce questa lista di token:
+[
+    Token::Based,
+    Token::Identifier("x"),
+    Token::Equals,
+    Token::Number(42),
+    Token::Newline,
+    Token::Flex,
+    Token::Identifier("x"),
+    Token::EOF
+]
+📝 COSA DEVI SCRIVERE (STRUTTURA)
+File 1: src/lexer/token.rs
+Qui definisci COSA SONO i token. Devi creare un enum Token con tutte le varianti:
+Keywords: Based, Rizz, Flex, Bussin, Fr, Ong, Cap, NoCap, ecc.
+Tipi: Whole, Real, Fax
+Literals: Number(i64), Float(f64), String(String)
+Identificatori: Identifier(String)
+Operatori: Plus, Minus, Star, Slash, Ratio, Equals, EqualsEquals
+Delimitatori: LeftParen, RightParen, LeftBrace, RightBrace, Semicolon, Comma
+Speciali: Newline, EOF
+File 2: src/lexer/lexer.rs (o mod.rs se preferisci)
+Qui c'è la LOGICA del lexer. Devi creare una struct Lexer con questi campi:
+input: String → il codice sorgente
+position: usize → posizione corrente nella stringa
+current_char: Option<char> → carattere corrente
+line: usize → riga corrente (per errori)
+column: usize → colonna corrente
+E questi metodi:
+new(input: String) → costruttore
+advance() → avanza di un carattere
+skip_whitespace() → salta spazi, tab, ecc.
+read_number() → legge un numero (intero o float)
+read_identifier() → legge un identificatore o keyword
+read_string() → legge una stringa tra virgolette
+next_token() → IL METODO PIÙ IMPORTANTE! Ritorna il prossimo token
+tokenize() → tokenizza tutto il file (loop di next_token())
+🧠 ALGORITMO DI next_token() (IL CUORE DEL LEXER)
+Questo è l'algoritmo che devi implementare:
+1. Salta tutti gli spazi bianchi (chiama skip_whitespace())
+
+2. Guarda il carattere corrente (current_char):
+
+   SE è None (fine stringa):
+      → ritorna Token::EOF
+
+   SE è una lettera (a-z, A-Z, _):
+      → chiama read_identifier()
+      → controlla se la parola è una keyword:
+         "based" → Token::Based
+         "rizz" → Token::Rizz
+         "cap" → Token::Cap
+         "nocap" → Token::NoCap
+         "flex" → Token::Flex
+         "bussin" → Token::Bussin
+         "fr" → Token::Fr
+         "ong" → Token::Ong
+         "lowkey" → Token::Lowkey
+         "ratio" → Token::Ratio
+         "whole" → Token::Whole
+         "real" → Token::Real
+         "fax" → Token::Fax
+         (aggiungi tutte le altre keyword!)
+      → altrimenti → Token::Identifier(parola)
+
+   SE è una cifra (0-9):
+      → chiama read_number()
+      → accumula cifre
+      → se trovi '.' accumula anche decimali
+      → ritorna Token::Number() o Token::Float()
+
+   SE è '"':
+      → chiama read_string()
+      → accumula caratteri fino al prossimo '"'
+      → ritorna Token::String()
+
+   SE è un operatore singolo:
+      '+' → Token::Plus, advance()
+      '-' → Token::Minus, advance()
+      '*' → Token::Star, advance()
+      '/' → Token::Slash, advance()
+      '(' → Token::LeftParen, advance()
+      ')' → Token::RightParen, advance()
+      '{' → Token::LeftBrace, advance()
+      '}' → Token::RightBrace, advance()
+      ';' → Token::Semicolon, advance()
+      ',' → Token::Comma, advance()
+
+   SE è '=':
+      → guarda il PROSSIMO carattere (lookahead)
+      → se il prossimo è '=' → Token::EqualsEquals, advance() 2 volte
+      → altrimenti → Token::Equals, advance() 1 volta
+
+   ALTRIMENTI:
+      → ERRORE: carattere illegale!
+🎓 COSA DEVI IMPARARE
+Pattern matching in Rust (match, if let)
+Iterazione su caratteri (chars(), peek())
+String manipulation (accumulare caratteri in una String)
+Option e Result (gestire None quando arrivi alla fine)
+Enum con dati (Token::Number(i64), Token::Identifier(String))
+✅ COME TESTARE
+Crea un file di test test.sgm:
+based x = 42
+flex x
+Nel main.rs devi:
+Leggere gli argomenti da CLI
+Leggere il file
+Creare il lexer: let mut lexer = Lexer::new(source_code);
+Tokenizzare: let tokens = lexer.tokenize();
+Stampare i token (con un for loop)
+Esegui:
+cargo run test.sgm
+Output atteso:
+Token::Based
+Token::Identifier("x")
+Token::Equals
+Token::Number(42)
+Token::Newline
+Token::Flex
+Token::Identifier("x")
+Token::EOF
+🚀 DA DOVE INIZI?
+Apri src/lexer/token.rs e definisci l'enum Token
+Apri src/lexer/mod.rs e inizia a scrivere la struct Lexer
+Implementa i metodi uno alla volta, testando ogni volta
+Inizia con new() e advance(), poi skip_whitespace(), poi read_number(), ecc.
+Ora è tutto chiaro? Da quale parte vuoi iniziare? Ti consiglio di partire definendo l'enum Token nel file token.rs! 💪
+
+FASE 2: IL PARSER (Analisi Sintattica)
+📂 Cartella: src/parser/ Cosa devi fare:
+Crea mod.rs e ast.rs (Abstract Syntax Tree)
+In ast.rs definisci le struct che rappresentano il tuo programma:
+Program (root)
+Statement (enum: VarDeclaration, FunctionDecl, IfStatement, etc.)
+Expression (enum: BinaryOp, FunctionCall, Literal, etc.)
+Crea parser.rs che:
+Prende la lista di Token dal lexer
+Costruisce l'AST seguendo le regole grammaticali
+Usa tecniche come recursive descent parsing
+Esempio:
+Tokens: [Based, Identifier("x"), Equals, Number(5)]
+AST: VarDeclaration { name: "x", value: Literal(5), mutable: false }
+FASE 3: SEMANTIC ANALYSIS (Controllo Tipi)
+📂 Cartella: src/semantic/ Cosa devi fare:
+Crea mod.rs e type_checker.rs
+Implementa:
+Symbol table (tabella che traccia variabili e loro tipi)
+Type checking (verifica che whole x = 5 non diventi poi x = "ciao")
+Scope checking (verifica che le variabili esistano)
+FASE 4: ERROR HANDLING
+📂 Cartella: src/error/ Cosa devi fare:
+Crea mod.rs e error.rs
+Definisci struct per errori carini:
+LexerError
+ParserError
+SemanticError
+Usa librerie come miette o ariadne per mostrare errori fighi con le linee colorate
+FASE 5: CODE GENERATION
+📂 Cartella: src/codegen/ Cosa devi fare:
+Decidi il target (opzioni):
+Interpretato: scrivi un interprete che esegue l'AST direttamente
+Transpiling: converti in JavaScript, Python o C
+LLVM: genera LLVM IR (più complesso ma vero compilatore)
+Bytecode custom: crea una tua VM
+Per iniziare ti consiglio transpiling a JavaScript perché è più facile
+Nel codegen.rs attraversi l'AST e generi codice target:
+VarDeclaration { name: "x", value: 5 } -> "const x = 5;"
+FASE 6: MAIN.RS
+📂 File: src/main.rs Cosa devi fare:
+Usa clap per parsing degli argomenti CLI
+Leggi il file sorgente .sigma
+Chiama in sequenza:
+Lexer → Parser → Semantic → Codegen
+Gestisci gli errori e mostrali carini
+FASE 7: TESTING
+📂 Cartella: tests/ Cosa devi fare:
+Crea file di esempio in tests/fixtures/ (codice .sigma)
+In tests/integration/ crea test Rust che:
+Leggono i file fixture
+Verificano che il compilatore funzioni correttamente
+🎯 ORDINE CONSIGLIATO:
+Token + Lexer (parti da qui!)
+Parser + AST (più complesso)
+Error handling (in parallelo)
+Semantic analysis
+Codegen semplice (transpiling)
+CLI in main.rs
+Testing e raffinamenti
+📦 DIPENDENZE CARGO UTILI:
+Aggiungi al tuo Cargo.toml:
+logos - lexer super veloce
+chumsky o nom - parser combinators
+ariadne - error reporting fighi
+clap - CLI parsing
+inkwell - se vuoi fare LLVM
+Vuoi che ti spieghi più nel dettaglio una fase specifica? Da quale vuoi iniziare? Ti consiglio di partire dal lexer perché è la base! 🔥
+puoi spiegarmi ogni componente cosa fa? tipo lexer, parser e altro? perché non posso fare manualmente le cose?
+Perfetto! Ti spiego tutto in modo semplice con esempi concreti. 🔥
+🎯 PERCHÉ NON PUOI FARE TUTTO MANUALMENTE?
+Immagina di avere questo codice Sigma:
+based x = 5
+rizz calcola(based num) {
+    fr (num ratio 10) {
+        bussin num
+    }
+    bussin 0
+}
+flex calcola(x)
+Se dovessi eseguirlo manualmente dovresti:
+Leggere carattere per carattere
+Capire dove finisce una parola e inizia un'altra
+Riconoscere che based è una keyword e x è un nome di variabile
+Capire la struttura (dove inizia/finisce una funzione, un if, etc.)
+Verificare che il tipo di x sia coerente
+Tradurlo in codice macchina
+È impossibile farlo a mano per programmi complessi! Per questo dividi il lavoro in fasi, ognuna con un compito specifico.
+📚 I COMPONENTI DEL COMPILATORE (SPIEGAZIONE SEMPLICE)
+1. LEXER (Analizzatore Lessicale) 🔤
+Cosa fa: Spezza il testo in "pezzi" chiamati TOKEN Analogia: Come quando leggi una frase in italiano e riconosci le singole parole. Esempio pratico:
+INPUT (stringa grezza):
+"based x = 5"
+
+OUTPUT (lista di token):
+[
+  Token::Based,
+  Token::Identifier("x"),
+  Token::Equals,
+  Token::Number(5)
+]
+Perché serve?
+Il compilatore non può lavorare con stringhe casuali
+Deve riconoscere patterns: parole chiave vs nomi variabili vs numeri vs operatori
+Elimina spazi bianchi, commenti inutili
+Identifica errori tipo caratteri illegali
+Cosa fa il lexer passo-passo:
+Prende "based x = 5"
+Legge b → ba → bas → base → based → trova uno spazio, STOP
+Controlla: "based" è una keyword? SÌ → crea Token::Based
+Salta lo spazio
+Legge x → trova uno spazio, STOP → è un identificatore → Token::Identifier("x")
+Legge = → è un operatore → Token::Equals
+Legge 5 → è un numero → Token::Number(5)
+2. PARSER (Analizzatore Sintattico) 🌳
+Cosa fa: Prende i token e costruisce un ALBERO che rappresenta la struttura del programma Analogia: Come l'analisi grammaticale a scuola (soggetto, verbo, complemento) Esempio pratico:
+INPUT (token dal lexer):
+[Token::Based, Token::Identifier("x"), Token::Equals, Token::Number(5)]
+
+OUTPUT (Abstract Syntax Tree - AST):
+Program
+└── VarDeclaration
+    ├── name: "x"
+    ├── mutable: false  (perché è "based")
+    └── value: Literal(5)
+Perché serve?
+I token da soli non hanno struttura
+Devi capire CHI fa COSA
+Esempio: 5 + 3 * 2 → il parser capisce che prima devi fare 3 * 2, poi 5 + 6 (precedenza operatori)
+Esempio più complesso:
+fr (x ratio 10) {
+    flex x
+}
+Diventa:
+IfStatement
+├── condition: BinaryOp
+│   ├── left: Identifier("x")
+│   ├── operator: GreaterThan
+│   └── right: Literal(10)
+└── body: Block
+    └── FlexStatement(Identifier("x"))
+Perché non puoi saltare questo step? Immagina di avere 2 + 3 * 4. I token sono [2, +, 3, *, 4]. Se li esegui nell'ordine ottieni 20 (sbagliato!). Il parser costruisce l'albero giusto che dice "prima moltiplica, poi somma" → 14 ✅
+3. SEMANTIC ANALYZER (Analisi Semantica) 🧠
+Cosa fa: Controlla che il programma abbia SENSO LOGICO Analogia: Come quando il prof ti dice "la frase è grammaticalmente corretta ma non ha senso" (es: "La sedia mangia il tempo verde") Esempio pratico:
+based x = 5        // OK: x è un numero
+flex x            // OK: x esiste
+flex y            // ERRORE: y non esiste!
+
+based nome = "Mario"
+based risultato = nome + 5  // ERRORE: non puoi sommare stringa + numero!
+Cosa controlla:
+Type checking (controllo tipi):
+whole x = 5 → OK
+whole x = "ciao" → ERRORE!
+Scope checking (controllo esistenza variabili):
+Usi x ma non l'hai mai dichiarata → ERRORE
+Control flow:
+Return in un punto irraggiungibile
+Funzione non ritorna un valore quando dovrebbe
+Perché serve? Il parser accetta anche questo:
+based x = "ciao"
+flex x + 5
+È sintatticamente corretto (le parole sono giuste), ma semanticamente sbagliato (non ha senso sommare stringa + numero). Il semantic analyzer lo blocca!
+4. CODE GENERATOR (Generatore di Codice) ⚙️
+Cosa fa: Traduce l'AST in codice eseguibile (JavaScript, assembly, bytecode, etc.) Analogia: Come un traduttore che prende italiano e scrive in inglese Esempio pratico (Transpiling a JavaScript):
+INPUT (AST):
+VarDeclaration { name: "x", value: 5, mutable: false }
+
+OUTPUT (JavaScript):
+const x = 5;
+Altro esempio:
+rizz somma(based a, based b) {
+    bussin a + b
+}
+Diventa (in JavaScript):
+function somma(a, b) {
+    return a + b;
+}
+Perché serve? L'AST è una struttura dati in memoria. Il computer non può eseguirlo direttamente! Devi convertirlo in:
+JavaScript/Python → facile, per iniziare
+Assembly/Machine code → difficile ma vero compilatore
+Bytecode custom → crei una tua virtual machine
+5. ERROR HANDLER (Gestione Errori) ⚠️
+Cosa fa: Mostra errori FIGHI all'utente invece di crashare Esempio brutto:
+Error: unexpected token at line 5
+Esempio bello (con ariadne/miette):
+Error: tipo incompatibile
+  ┌─ example.sigma:3:10
+  │
+3 │ based x = "ciao"
+  │           ^^^^^^ tipo 'fax' (stringa)
+4 │ flex x + 5
+  │      ^^^^^ non puoi sommare 'fax' + 'whole'
+  │
+  = help: converti la stringa in numero o usa concatenazione
+Perché serve? Errori chiari = sviluppatori felici. Se il tuo compilatore dice solo "ERRORE" senza spiegare dove e perché, nessuno lo userà!
+6. UTILS 🛠️
+Cosa fa: Funzioni helper usate ovunque Esempi:
+Leggere file da disco
+Gestire le posizioni nel codice (riga, colonna)
+Pretty-printing dell'AST per debug
+Escape di stringhe
+🔄 FLUSSO COMPLETO - ESEMPIO PRATICO
+Hai questo file test.sigma:
+based x = 42
+flex x
+Step 1: LEXER
+Input: "based x = 42\nflex x"
+
+Output:
+[
+  Token::Based,
+  Token::Identifier("x"),
+  Token::Equals,
+  Token::Number(42),
+  Token::Newline,
+  Token::Flex,
+  Token::Identifier("x")
+]
+Step 2: PARSER
+Input: lista di token sopra
+
+Output (AST):
+Program {
+  statements: [
+    VarDeclaration {
+      name: "x",
+      value: Literal(42),
+      mutable: false
+    },
+    FlexStatement {
+      expr: Identifier("x")
+    }
+  ]
+}
+Step 3: SEMANTIC ANALYZER
+- Crea symbol table: { "x": Type::Whole }
+- Controlla FlexStatement: "x" esiste? SÌ ✅
+- Controllo tipi: tutto OK ✅
+Step 4: CODEGEN (transpile a JS)
+Input: AST
+
+Output:
+const x = 42;
+console.log(x);
+Step 5: ESECUZIONE
+$ node output.js
+42
+❓ PERCHÉ NON PUOI FARE TUTTO IN UN SOLO STEP?
+Motivo 1: COMPLESSITÀ Prova a scrivere una funzione che fa tutto insieme:
+fn compila_tutto(codice: &str) -> String {
+    // Qui devi fare lexing, parsing, type checking, 
+    // e codegen tutto mischiato... IMPOSSIBILE DA MANTENERE!
+}
+Motivo 2: RIUSABILITÀ Se separi, puoi:
+Cambiare solo il codegen (da JS a Python) senza toccare il resto
+Testare ogni componente separatamente
+Aggiungere features (es: ottimizzazioni) tra parser e codegen
+Motivo 3: ERRORI CHIARI Ogni fase può dare errori specifici:
+Lexer: "carattere illegale"
+Parser: "syntax error, aspettavo ;"
+Semantic: "variabile non dichiarata"
+Motivo 4: È IMPOSSIBILE Considera questo:
+based x = y + z
+Mentre leggi i caratteri, come fai a sapere se y esiste? Devi prima aver letto TUTTO il programma, costruito la symbol table, POI controllare. Non puoi farlo in un solo passaggio lineare!
+🎯 RIASSUNTO ULTRA-SEMPLICE
+Componente	Input	Output	Fa...
+Lexer	Stringa	Token	Riconosce parole
+Parser	Token	AST	Costruisce struttura
+Semantic	AST	AST validato	Controlla errori logici
+Codegen	AST	Codice target	Traduce in altra lingua
+Error	Errori	Messaggi belli	Comunica all'utente
+Ora è più chiaro? Da dove vuoi iniziare? Ti consiglio di partire dal LEXER perché è la base e il più semplice da capire! 🚀
+
+Esatto, il codice lo scrivi tu! 💪 Però puoi usare librerie helper per semplificarti la vita:
+Opzione 1: Scrivi tutto a mano (più educativo, capisci tutto)
+Opzione 2: Usi librerie come logos per il lexer (più veloce, meno codice)
+Ti consiglio Opzione 1 per iniziare così capisci come funziona, poi eventualmente refactori con librerie.
+📝 STEP 1: PREPARIAMO IL MAIN.RS
+Il main.rs deve:
+Leggere un file .sgm dalla command line
+Passare il contenuto al lexer
+Mostrare i token (per ora)
+Cosa devi fare nel main.rs:
+// Struttura che ti consiglio:
+1. Importa le dipendenze necessarie
+   - std::fs per leggere file
+   - std::env per gli argomenti CLI (o usa clap)
+
+2. Funzione main:
+   - Leggi il path del file dagli argomenti (es: cargo run test.sgm)
+   - Leggi il contenuto del file in una String
+   - Crea un'istanza del Lexer passandogli la stringa
+   - Chiama il metodo che tokenizza
+   - Stampa i token (per debug)
+Pseudocodice di come dovrebbe essere:
+fn main() {
+    // 1. Ottieni il path del file
+    let args = raccogli argomenti da command line
+    
+    if args.len() < 2 {
+        stampa "Usage: sigma <file.sgm>"
+        esci
+    }
+    
+    let file_path = args[1]
+    
+    // 2. Leggi il file
+    let source_code = leggi file(file_path)
+    
+    // 3. Tokenizza
+    let mut lexer = Lexer::new(source_code)
+    let tokens = lexer.tokenize()
+    
+    // 4. Debug: stampa i token
+    for token in tokens {
+        stampa token
+    }
+}
+Dipendenze da aggiungere al Cargo.toml (opzionale):
+Nessuna per ora se vuoi fare tutto a mano!
+Oppure clap se vuoi un CLI più professionale (ma puoi farlo dopo)
+🔤 STEP 2: COME SCRIVERE IL LEXER
+Ti spiego passo-passo cosa devi creare nella cartella src/lexer/
+File 1: src/lexer/token.rs
+Qui definisci COSA sono i token.
+// Struttura che ti consiglio:
+
+1. Crea un enum Token con tutte le varianti:
+   - Parole chiave (Based, Rizz, Cap, NoCap, Bussin, Flex, ecc.)
+   - Identificatori (nomi di variabili/funzioni)
+   - Letterali (numeri, stringhe)
+   - Operatori (+, -, *, /, =, ratio, ecc.)
+   - Delimitatori ({, }, (, ), ;, ecc.)
+   - Fine del file (EOF)
+
+2. (Opzionale) Crea una struct che tiene traccia della posizione:
+   struct Span {
+       line: usize,
+       column: usize,
+   }
+   
+3. (Opzionale) Wrappa token + posizione:
+   struct TokenWithSpan {
+       token: Token,
+       span: Span,
+   }
+Esempio di enum Token:
+pub enum Token {
+    // Keywords
+    Based,          // let const
+    Rizz,           // function
+    Bussin,         // return
+    Flex,           // print
+    Fr,             // if
+    Ong,            // else
+    Lowkey,         // while
+    Cap,            // true
+    NoCap,          // false
+    
+    // Tipi
+    Whole,          // int
+    Real,           // float
+    Fax,            // string
+    
+    // Literals
+    Number(i64),
+    Float(f64),
+    String(String),
+    Identifier(String),  // nomi variabili
+    
+    // Operatori
+    Plus,           // +
+    Minus,          // -
+    Star,           // *
+    Slash,          // /
+    Ratio,          // > (greater than)
+    Equals,         // =
+    EqualsEquals,   // ==
+    
+    // Delimitatori
+    LeftParen,      // (
+    RightParen,     // )
+    LeftBrace,      // {
+    RightBrace,     // }
+    Semicolon,      // ;
+    Comma,          // ,
+    
+    // Speciali
+    Newline,
+    EOF,
+}
+Aggiungi anche un modo per stampare i token (implementa Debug o Display).
+File 2: src/lexer/lexer.rs
+Qui c'è la LOGICA che scansiona il codice.
+// Struttura che ti consiglio:
+
+pub struct Lexer {
+    input: String,           // Il codice sorgente
+    position: usize,         // Posizione corrente (indice nel carattere)
+    current_char: Option<char>, // Carattere corrente
+    line: usize,             // Riga corrente (per errori)
+    column: usize,           // Colonna corrente
+}
+
+impl Lexer {
+    // Costruttore
+    pub fn new(input: String) -> Self {
+        // Inizializza position a 0
+        // Setta current_char al primo carattere
+        // Line = 1, column = 1
+    }
+    
+    // Avanza di un carattere
+    fn advance(&mut self) {
+        // Incrementa position
+        // Aggiorna current_char
+        // Se trovi '\n', incrementa line e resetta column
+    }
+    
+    // Salta spazi bianchi
+    fn skip_whitespace(&mut self) {
+        // Mentre current_char è ' ', '\t', '\r', ecc. → advance()
+    }
+    
+    // Leggi un numero
+    fn read_number(&mut self) -> Token {
+        // Accumula cifre in una String
+        // Se trovi '.', è un float
+        // Converti in i64 o f64
+        // Ritorna Token::Number() o Token::Float()
+    }
+    
+    // Leggi un identificatore o keyword
+    fn read_identifier(&mut self) -> Token {
+        // Accumula lettere/numeri/_
+        // Alla fine controlla se è una keyword (based, rizz, ecc.)
+        // Altrimenti è Token::Identifier()
+    }
+    
+    // Leggi una stringa "..."
+    fn read_string(&mut self) -> Token {
+        // Avanza oltre il primo "
+        // Accumula caratteri fino al prossimo "
+        // Ritorna Token::String()
+    }
+    
+    // Funzione principale: ottieni il prossimo token
+    pub fn next_token(&mut self) -> Token {
+        // Skip whitespace
+        // Controlla current_char:
+        //   - Se è None → EOF
+        //   - Se è cifra → read_number()
+        //   - Se è lettera → read_identifier()
+        //   - Se è '"' → read_string()
+        //   - Se è '+' → Token::Plus
+        //   - Se è '(' → Token::LeftParen
+        //   - ecc.
+    }
+    
+    // Tokenizza tutto il file
+    pub fn tokenize(&mut self) -> Vec<Token> {
+        let mut tokens = Vec::new();
+        loop {
+            let token = self.next_token();
+            if matches!(token, Token::EOF) {
+                tokens.push(token);
+                break;
+            }
+            tokens.push(token);
+        }
+        tokens
+    }
+}
+File 3: src/lexer/mod.rs
+Questo è il file che esporta i moduli.
+// Semplicemente:
+
+pub mod token;
+pub mod lexer;
+
+// Re-esporta per comodità
+pub use token::Token;
+pub use lexer::Lexer;
+🎯 ALGORITMO DEL LEXER (LOGICA DETTAGLIATA)
+next_token() - Il cuore del lexer:
+1. Salta tutti gli spazi bianchi
+
+2. Guarda il carattere corrente:
+
+   SE è None (fine stringa):
+      → ritorna Token::EOF
+   
+   SE è una lettera (a-z, A-Z, _):
+      → chiama read_identifier()
+      → controlla se è una keyword:
+         "based" → Token::Based
+         "rizz" → Token::Rizz
+         "cap" → Token::Cap
+         ...
+      → altrimenti Token::Identifier(nome)
+   
+   SE è una cifra (0-9):
+      → chiama read_number()
+      → accumula cifre
+      → se trovi '.' accumula anche decimali
+      → ritorna Token::Number() o Token::Float()
+   
+   SE è '"':
+      → chiama read_string()
+      → accumula caratteri fino al prossimo '"'
+      → ritorna Token::String()
+   
+   SE è un operatore singolo:
+      '+' → Token::Plus, advance()
+      '-' → Token::Minus, advance()
+      '*' → Token::Star, advance()
+      '/' → Token::Slash, advance()
+      '(' → Token::LeftParen, advance()
+      ')' → Token::RightParen, advance()
+      '{' → Token::LeftBrace, advance()
+      '}' → Token::RightBrace, advance()
+      ';' → Token::Semicolon, advance()
+      ',' → Token::Comma, advance()
+   
+   SE è '=':
+      → guarda il PROSSIMO carattere
+      → se è '=' → Token::EqualsEquals, advance() 2 volte
+      → altrimenti → Token::Equals, advance() 1 volta
+   
+   ALTRIMENTI:
+      → errore: carattere illegale!
+Esempio pratico: come read_identifier() funziona
+Input: "based"
+       ^
+       position
+
+1. current_char = 'b' (è lettera)
+2. Crea una String vuota: result = ""
+3. Loop:
+   - result += 'b', advance() → result = "b"
+   - current_char = 'a', result += 'a', advance() → result = "ba"
+   - current_char = 's', result += 's', advance() → result = "bas"
+   - current_char = 'e', result += 'e', advance() → result = "base"
+   - current_char = 'd', result += 'd', advance() → result = "based"
+   - current_char = ' ' (NON è lettera/cifra) → STOP
+4. Controlla result == "based" → è keyword → ritorna Token::Based
+Esempio pratico: come read_number() funziona
+Input: "42.5"
+       ^
+       position
+
+1. current_char = '4' (è cifra)
+2. result = ""
+3. Loop cifre intere:
+   - result += '4', advance() → result = "4"
+   - current_char = '2', result += '2', advance() → result = "42"
+   - current_char = '.' → TROVATO DECIMALE!
+4. result += '.', advance()
+5. Loop cifre decimali:
+   - result += '5', advance() → result = "42.5"
+   - current_char = ' ' (non cifra) → STOP
+6. Converti "42.5" in f64 → Token::Float(42.5)
+📋 RIASSUNTO: COSA DEVI SCRIVERE
+Nel main.rs:
+Leggi argomenti CLI
+Leggi file
+Crea Lexer
+Chiama lexer.tokenize()
+Stampa risultati
+In src/lexer/token.rs:
+Enum Token con tutte le varianti
+Implementa Debug per stamparlo
+In src/lexer/lexer.rs:
+Struct Lexer con campi (input, position, current_char, line, column)
+Metodo new()
+Metodo advance()
+Metodo skip_whitespace()
+Metodo read_number()
+Metodo read_identifier()
+Metodo read_string()
+Metodo next_token() (il più importante!)
+Metodo tokenize()
+In src/lexer/mod.rs:
+Esporta i moduli
+🧪 COME TESTARE
+Crea un file test.sgm:
+based x = 42
+flex x
+Esegui:
+cargo run test.sgm
+Output atteso:
+Token::Based
+Token::Identifier("x")
+Token::Equals
+Token::Number(42)
+Token::Newline
+Token::Flex
+Token::Identifier("x")
+Token::EOF
+Ora hai tutto chiaro? Inizia a scrivere il codice e fammi sapere quando hai dubbi o quando hai finito il lexer! 🚀 Vuoi che ti chiarisca qualche parte specifica prima di iniziare a scrivere?
