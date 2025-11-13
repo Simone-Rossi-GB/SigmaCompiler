@@ -8,3 +8,4 @@ name = "sigma"
 path = "src/main.rs"
 
 [dependencies]
+log = "0.4.28"

@@ -1,4 +1,5 @@
 use crate::lexer::{chunker, tokenizer};
+use crate::parser::{parse};
 
 pub fn compile(code: &str) -> Result<(), String> {
     // 1. Prima chunker: divide il codice in pezzi
@@ -10,5 +11,8 @@ pub fn compile(code: &str) -> Result<(), String> {
     println!("\n=== Tokenizzazione completata ===");
     println!("Totale token: {}", tokens.len());
 
+    let ast = parse(tokens)?;
+    println!("\n===== Stampo AST =====");
+    println!("{:#?}", ast);
     Ok(())
 }

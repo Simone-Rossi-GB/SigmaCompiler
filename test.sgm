@@ -1,5 +1,5 @@
-bussin sigma() {
+bussin ghost sigma() {
     based x slay 42;
     vibes message slay "Hello, World!";
-    flex(message);
+    flex message;
 }

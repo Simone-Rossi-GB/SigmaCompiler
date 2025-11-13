@@ -1,14 +1,12 @@
-use std::any::{Any, TypeId};
-use std::collections::HashMap;
-use std::hash::Hash;
-use std::iter::{Enumerate, Map};
+use std::str::Chars;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Token {
     // Tipi di dato
     Based,      // int
     SuperBased, // long
     Chill,      // float
+    Chad,       // char
     Vibes,      // string
     Ghost,      // void
 
@@ -37,8 +35,10 @@ pub enum Token {
 
     // Identificatori e letterali
     Rizz(String),      // identifier/variable name
-    Number(i64),       // numero
+    IntLit(i64),       // numero intero
+    FloatLit(f64),     // numero decimale
     StringLit(String), // stringa
+    CharLit(char),
 
     // Simboli
     OpenParen,    // (
@@ -95,6 +95,8 @@ pub fn tokenizer(chunks: Vec<String>) -> Vec<Token> {
             tokens.push(Token::Slay)
         } else if chunk.eq("flex") {
             tokens.push(Token::Flex)
+        } else if chunk.eq("chad") {
+            tokens.push(Token::Chad)
         } else if chunk.eq("yeet") {
             tokens.push(Token::Yeet)
         } else if chunk.eq("sixSeven") {
@@ -128,14 +130,53 @@ pub fn tokenizer(chunks: Vec<String>) -> Vec<Token> {
         } else if chunk.eq(",") {
             tokens.push(Token::Comma)
 
-        // 3. Numeri
+        // 3. Numeri (prima prova float, poi int)
+        } else if chunk.contains('.') {
+            // Se contiene un punto, è un float
+            if let Ok(num) = chunk.parse::<f64>() {
+                tokens.push(Token::FloatLit(num))
+            } else {
+                tokens.push(Token::Unknown(chunk.clone()))
+            }
         } else if let Ok(num) = chunk.parse::<i64>() {
-            tokens.push(Token::Number(num))
+            // Altrimenti è un intero
+            tokens.push(Token::IntLit(num))
 
-        // 4. Stringhe letterali (tra virgolette)
+        // 4. Stringhe letterali (tra virgolette) (Vibes)
         } else if chunk.starts_with('"') && chunk.ends_with('"') && chunk.len() > 1 {
             let content = chunk[1..chunk.len()-1].to_string();
             tokens.push(Token::StringLit(content))
+
+        // 5. Caratteri letterali (tra virgolette semplici) (Chad)
+        } else if chunk.starts_with('\'') && chunk.ends_with('\'') && chunk.len() >= 3 {
+            // Estrai il contenuto tra gli apici
+            let content = &chunk[1..chunk.len()-1];
+
+            let ch = if content.starts_with('\\') && content.len() == 2 {
+                // Escape sequence
+                match content.chars().nth(1).unwrap() {
+                    'n' => '\n',    // newline
+                    't' => '\t',    // tab
+                    'r' => '\r',    // carriage return
+                    '0' => '\0',    // null
+                    '\\' => '\\',   // backslash
+                    '\'' => '\'',   // apice singolo
+                    '"' => '"',     // virgoletta doppia
+                    _ => {
+                        tokens.push(Token::Unknown(chunk.clone()));
+                        continue;
+                    }
+                }
+            } else if content.len() == 1 {
+                // Carattere normale
+                content.chars().next().unwrap()
+            } else {
+                // Errore: troppi caratteri
+                tokens.push(Token::Unknown(chunk.clone()));
+                continue;
+            };
+
+            tokens.push(Token::CharLit(ch))
 
         // 5. Identificatori (Rizz)
         } else if is_valid_identifier(chunk) {

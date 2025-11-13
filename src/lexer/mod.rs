@@ -3,4 +3,4 @@ pub mod tokenizer;
 
 // Re-export per facilitare l'uso
 pub use chunker::chunker;
-pub use tokenizer::{tokenizer, Token};
+pub use tokenizer::tokenizer;
