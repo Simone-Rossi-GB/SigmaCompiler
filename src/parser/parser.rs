@@ -1,0 +1,234 @@
+use crate::lexer::tokenizer::Token;
+use crate::parser::ast::*;
+use crate::parser::Statement::{Assignment, VarDecl};
+use crate::parser::Type::SuperBased;
+
+fn parse_function(tokens: &[Token], index: &mut usize) -> Result<Function, String> {
+    *index += 1;
+
+    let return_type = match &tokens[*index] {
+        Token::Based => Type::Based,
+        Token::SuperBased => Type::SuperBased,
+        Token::Chill => Type::Chill,
+        Token::Vibes => Type::Vibes,
+        Token::Ghost => Type::Ghost,
+        _ => return Err("Expected return type after 'bussin'".to_string())
+    };
+
+    *index += 1;
+
+    let name = match &tokens[*index] {
+        Token::Sigma => "sigma".to_string(),
+        Token::Rizz(n) => n.clone(),
+        _ => return Err("Expected function name after type of bussin".to_string())
+    };
+
+    *index += 1;
+
+    if !matches!(tokens[*index], Token::OpenParen) {
+        return Err("Expected '(' after function name".to_string());
+    }
+
+    *index += 1;
+
+    let parameters = Vec::new();
+
+    if !matches!(tokens[*index], Token::CloseParen){
+        // parse_parameters(tokens, index)
+        if !matches!(tokens[*index], Token::CloseParen) {
+            return Err("Expected ')' after function '('".to_string());
+        }
+    } else {
+        *index += 1;
+    }
+
+    if !matches!(tokens[*index], Token::OpenBrace) {
+        return Err("Expected '{' to start function body".to_string());
+    }
+
+    *index += 1;
+
+    let body = parse_body(tokens, index)?;
+
+    if !matches!(tokens[*index], Token::CloseBrace) {
+        return Err("Expected '}' to end function body".to_string());
+    }
+
+    *index += 1;
+
+    Ok(Function {
+        name,
+        return_type,
+        parameters,
+        body
+    })
+}
+
+// ==================== FUNZIONI HELPER PER GLI STATEMENT ====================
+
+fn parse_var_decl(tokens: &[Token], index: &mut usize) -> Result<Statement, String> {
+    let var_type = match &tokens[*index] {
+        Token::Based => Type::Based,
+        Token::SuperBased => Type::SuperBased,
+        Token::Chill => Type::Chill,
+        Token::Vibes => Type::Vibes,
+        Token::Chad => Type::Chad,
+        _ => return Err("Expected type in variable declaration".to_string())
+    };
+
+    *index += 1;
+
+    let name = match &tokens[*index] {
+        Token::Rizz(n) => n.clone(),
+        _ => return Err("Expected variable name after type".to_string())
+    };
+
+    *index += 1;
+
+    if !matches!(tokens[*index], Token::Slay) {
+        return Err("Expected 'slay' after variable name".to_string());
+    }
+
+    *index += 1;
+
+    let value = parse_expression(tokens, index)?;
+
+    if !matches!(tokens[*index], Token::Semicolon) {
+        return Err("Expected ';' after variable value".to_string());
+    }
+
+    *index += 1;
+
+    Ok(Statement::VarDecl {var_type, name, value})
+}
+
+fn parse_assignment(tokens: &[Token], index: &mut usize) -> Result<Statement, String> {
+    let name = match &tokens[*index] {
+        Token::Rizz(n) => n.clone(),
+        _ => return Err("Expected variable name in assignment".to_string())
+    };
+
+    *index += 1;
+
+    if !matches!(tokens[*index], Token::Slay) {
+        return Err("Expected 'slay' after variable name".to_string());
+    }
+
+    *index += 1;
+
+    let value = parse_expression(tokens, index)?;
+
+    if !matches!(tokens[*index], Token::Semicolon) {
+        return Err("Expected ';' after variable value".to_string());
+    }
+
+    *index += 1;
+
+    Ok(Statement::Assignment {name, value})
+}
+
+fn parse_print(tokens: &[Token], index: &mut usize) -> Result<Statement, String> {
+
+    *index += 1;
+
+    let expr = parse_expression(tokens, index)?;
+
+    if !matches!(tokens[*index], Token::Semicolon) {
+        return Err("Expected ';' after print statement".to_string());
+    }
+
+    *index += 1;
+
+    Ok(Statement::Print {expr})
+}
+
+fn parse_return(tokens: &[Token], index: &mut usize) -> Result<Statement, String> {
+    *index += 1;
+
+    let expr = if matches!(tokens[*index], Token::Semicolon) {
+        None
+    } else {
+        Some(parse_expression(tokens, index)?)
+    };
+
+    if !matches!(tokens[*index], Token::Semicolon) {
+        return Err("Expected ';' after return statement".to_string());
+    }
+
+    *index += 1;
+
+    Ok(Statement::Return {expr})
+}
+
+fn parse_expression(tokens: &[Token], index: &mut usize) -> Result<Expression, String> {
+    let expr = match &tokens[*index] {
+        Token::IntLit(n) => {
+            if *n >= i32::MIN as i64 && *n <= i32::MAX as i64 {
+                Expression::Integer(*n as i32)
+            } else {
+                Expression::Long(*n)
+            }
+        }
+        Token::FloatLit(f) => Expression::Float(*f),
+        Token::StringLit(s) => Expression::StringLit(s.clone()),
+        Token::CharLit(c) => Expression::CharLit(*c),
+        Token::Rizz(name) => Expression::Variable(name.clone()),
+        _ => return Err(format!("Expected expression, found {:?}", tokens[*index]))
+    };
+
+    *index += 1;
+
+    Ok(expr)
+}
+
+// ==================== PARSING DEL BODY ====================
+
+fn parse_body(tokens: &[Token], index: &mut usize) -> Result<Vec<Statement>, String> {
+    let mut statements = Vec::new();
+
+    // Loop finché non incontriamo "}"
+    while !matches!(tokens[*index], Token::CloseBrace) {
+        // Guarda che token è e decidi cosa fare
+        let stmt = match &tokens[*index] {
+            Token::Based | Token::SuperBased | Token::Chill | Token::Vibes | Token::Chad => parse_var_decl(tokens, index)?,
+            Token::Flex => parse_print(tokens, index)?,
+            Token::Ohio => {
+                *index += 1;
+                if !matches!(tokens[*index], Token::Semicolon) {
+                    return Err("Expected ';' after 'ohio'".to_string());
+                }
+                *index += 1;
+                Statement::Break
+            }
+            Token::Yeet => parse_return(tokens, index)?,
+            Token::Rizz(_) => parse_assignment(tokens, index)?,
+            _ => return Err(format!("Unexpected token in body: {:?}", tokens[*index]))
+        };
+
+        statements.push(stmt);
+    }
+
+    Ok(statements)
+}
+
+pub fn parse(tokens: Vec<Token>) -> Result<Program, String> {
+    let mut index = 0;
+    let mut functions = Vec::new();
+
+    while index < tokens.len() {
+        if tokens[index] == Token::Bussin {
+            let func = parse_function(&tokens, &mut index);
+            functions.push(func?);
+        } else {
+            return Err("Expected function declaration".to_string());
+        }
+    }
+
+    //controlliamo se c'è almeno un main
+    let has_main = functions.iter().any(|f| f.name == "sigma");
+    if !has_main {
+        return Err("Program must have at least one 'bussin sigma()' function".to_string());
+    }
+
+    Ok(Program { functions })
+}
