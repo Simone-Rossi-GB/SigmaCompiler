@@ -15,6 +15,6 @@ pub fn compile(code: &str) -> Result<(), String> {
     let ast = parse(tokens)?;
     println!("\n===== Stampo AST =====");
     println!("{:#?}", ast);
-    analyze_program(ast);
+    analyze_program(ast)?;
     Ok(())
 }

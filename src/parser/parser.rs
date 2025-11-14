@@ -29,16 +29,7 @@ fn parse_function(tokens: &[Token], index: &mut usize) -> Result<Function, Strin
 
     *index += 1;
 
-    let parameters = Vec::new();
-
-    if !matches!(tokens[*index], Token::CloseParen){
-        // parse_parameters(tokens, index)
-        if !matches!(tokens[*index], Token::CloseParen) {
-            return Err("Expected ')' after function '('".to_string());
-        }
-    } else {
-        *index += 1;
-    }
+    let parameters = parse_parameters(tokens, index)?;
 
     if !matches!(tokens[*index], Token::OpenBrace) {
         return Err("Expected '{' to start function body".to_string());
@@ -60,6 +51,57 @@ fn parse_function(tokens: &[Token], index: &mut usize) -> Result<Function, Strin
         parameters,
         body
     })
+}
+
+fn parse_parameters(tokens: &[Token], index: &mut usize) -> Result<Vec<Parameter>, String> {
+    let mut parameters = Vec::new();
+
+    // Se c'è subito ), non ci sono parametri
+    if matches!(tokens[*index], Token::CloseParen) {
+        *index += 1; // Consuma )
+        return Ok(parameters);
+    }
+
+    // Altrimenti, parsare i parametri in loop
+    loop {
+        // Parse tipo del parametro
+        let parameter_type = match &tokens[*index] {
+            Token::Based => Type::Based,
+            Token::SuperBased => Type::SuperBased,
+            Token::Chill => Type::Chill,
+            Token::Vibes => Type::Vibes,
+            Token::Chad => Type::Chad,
+            Token::Ghost => Type::Ghost,
+            _ => return Err("Expected parameter type".to_string())
+        };
+
+        *index += 1;
+
+        // Parse nome del parametro
+        let name = match &tokens[*index] {
+            Token::Rizz(n) => n.clone(),
+            _ => return Err("Expected parameter name after type".to_string())
+        };
+
+        *index += 1;
+
+        // Aggiungi il parametro al vettore
+        parameters.push(Parameter { name, parameter_type });
+
+        // Controlla cosa viene dopo: virgola o )
+        match &tokens[*index] {
+            Token::Comma => {
+                *index += 1; // Consuma la virgola e continua al prossimo parametro
+            },
+            Token::CloseParen => {
+                *index += 1; // Consuma ) e termina
+                break;
+            },
+            _ => return Err("Expected ',' or ')' after parameter".to_string())
+        }
+    }
+
+    Ok(parameters)
 }
 
 // ==================== FUNZIONI HELPER PER GLI STATEMENT ====================

@@ -58,7 +58,7 @@ pub enum BinOp {
     GreaterEq // >=
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Type {
     Based,      // int
     SuperBased, // long
