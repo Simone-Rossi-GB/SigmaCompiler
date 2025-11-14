@@ -1,7 +1,5 @@
 use crate::lexer::tokenizer::Token;
 use crate::parser::ast::*;
-use crate::parser::Statement::{Assignment, VarDecl};
-use crate::parser::Type::SuperBased;
 
 fn parse_function(tokens: &[Token], index: &mut usize) -> Result<Function, String> {
     *index += 1;
@@ -160,7 +158,86 @@ fn parse_return(tokens: &[Token], index: &mut usize) -> Result<Statement, String
     Ok(Statement::Return {expr})
 }
 
+// Entry point per le espressioni - gestisce la precedenza più bassa
 fn parse_expression(tokens: &[Token], index: &mut usize) -> Result<Expression, String> {
+    parse_comparison(tokens, index)
+}
+
+// Livello 1: Comparazione (==, !=, <, >, <=, >=)
+fn parse_comparison(tokens: &[Token], index: &mut usize) -> Result<Expression, String> {
+    let mut left = parse_additive(tokens, index)?;
+
+    while *index < tokens.len() {
+        let op = match &tokens[*index] {
+            Token::Equal => BinOp::Equal,
+            Token::NotEqual => BinOp::NotEqual,
+            Token::Less => BinOp::Less,
+            Token::Greater => BinOp::Greater,
+            Token::LessEq => BinOp::LessEq,
+            Token::GreaterEq => BinOp::GreaterEq,
+            _ => break
+        };
+
+        *index += 1;
+        let right = parse_additive(tokens, index)?;
+        left = Expression::BinOp {
+            left: Box::new(left),
+            op,
+            right: Box::new(right)
+        };
+    }
+
+    Ok(left)
+}
+
+// Livello 2: Addizione/Sottrazione (+, -)
+fn parse_additive(tokens: &[Token], index: &mut usize) -> Result<Expression, String> {
+    let mut left = parse_multiplicative(tokens, index)?;
+
+    while *index < tokens.len() {
+        let op = match &tokens[*index] {
+            Token::Plus => BinOp::Add,
+            Token::Minus => BinOp::Sub,
+            _ => break
+        };
+
+        *index += 1;
+        let right = parse_multiplicative(tokens, index)?;
+        left = Expression::BinOp {
+            left: Box::new(left),
+            op,
+            right: Box::new(right)
+        };
+    }
+
+    Ok(left)
+}
+
+// Livello 3: Moltiplicazione/Divisione (*, /)
+fn parse_multiplicative(tokens: &[Token], index: &mut usize) -> Result<Expression, String> {
+    let mut left = parse_primary(tokens, index)?;
+
+    while *index < tokens.len() {
+        let op = match &tokens[*index] {
+            Token::Star => BinOp::Mul,
+            Token::Slash => BinOp::Div,
+            _ => break
+        };
+
+        *index += 1;
+        let right = parse_primary(tokens, index)?;
+        left = Expression::BinOp {
+            left: Box::new(left),
+            op,
+            right: Box::new(right)
+        };
+    }
+
+    Ok(left)
+}
+
+// Livello 4: Primari (numeri, variabili, parentesi)
+fn parse_primary(tokens: &[Token], index: &mut usize) -> Result<Expression, String> {
     let expr = match &tokens[*index] {
         Token::IntLit(n) => {
             if *n >= i32::MIN as i64 && *n <= i32::MAX as i64 {
@@ -173,11 +250,22 @@ fn parse_expression(tokens: &[Token], index: &mut usize) -> Result<Expression, S
         Token::StringLit(s) => Expression::StringLit(s.clone()),
         Token::CharLit(c) => Expression::CharLit(*c),
         Token::Rizz(name) => Expression::Variable(name.clone()),
+
+        // Gestione parentesi: (2 + 3) * 4
+        Token::OpenParen => {
+            *index += 1;
+            let expr = parse_expression(tokens, index)?;
+            if !matches!(tokens[*index], Token::CloseParen) {
+                return Err("Expected ')' after expression".to_string());
+            }
+            *index += 1;
+            return Ok(expr);
+        }
+
         _ => return Err(format!("Expected expression, found {:?}", tokens[*index]))
     };
 
     *index += 1;
-
     Ok(expr)
 }
 

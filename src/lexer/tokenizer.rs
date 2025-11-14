@@ -16,6 +16,18 @@ pub enum Token {
 
     // Operatori e keywords
     Slay,       // = (assignment)
+    Plus,       // +
+    Minus,      // -
+    Star,       // *
+    Slash,      // /
+
+    // Operatori di comparazione
+    Equal,      // == (uguaglianza)
+    NotEqual,   // !=
+    Less,       // <
+    Greater,    // >
+    LessEq,     // <=
+    GreaterEq,  // >=
     Flex,       // print
     Yeet,       // return
 
@@ -93,6 +105,26 @@ pub fn tokenizer(chunks: Vec<String>) -> Vec<Token> {
             tokens.push(Token::Fr)
         } else if chunk.eq("slay") {
             tokens.push(Token::Slay)
+        } else if chunk.eq("==") {
+            tokens.push(Token::Equal)
+        } else if chunk.eq("!=") {
+            tokens.push(Token::NotEqual)
+        } else if chunk.eq("-") {
+            tokens.push(Token::Minus)
+        } else if chunk.eq("+") {
+            tokens.push(Token::Plus)
+        } else if chunk.eq("*") {
+            tokens.push(Token::Star)
+        } else if chunk.eq("/") {
+            tokens.push(Token::Slash)
+        } else if chunk.eq("<") {
+            tokens.push(Token::Less)
+        } else if chunk.eq(">") {
+            tokens.push(Token::Greater)
+        } else if chunk.eq("<=") {
+            tokens.push(Token::LessEq)
+        } else if chunk.eq(">=") {
+            tokens.push(Token::GreaterEq)
         } else if chunk.eq("flex") {
             tokens.push(Token::Flex)
         } else if chunk.eq("chad") {

@@ -1,6 +1,7 @@
 mod lexer;
 mod compiler;
 mod parser;
+mod semantic;
 
 use std::env;
 use std::fs;

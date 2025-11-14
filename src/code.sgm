@@ -1,5 +1,9 @@
 bussin ghost sigma() {
     based x slay 42;
+    based y slay 31;
+    based somma slay 0;
+    somma slay x + y;
     vibes message slay "Hello, World!";
     flex message;
+    flex somma;
 }

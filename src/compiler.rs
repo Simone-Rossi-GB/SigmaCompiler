@@ -1,5 +1,6 @@
 use crate::lexer::{chunker, tokenizer};
 use crate::parser::{parse};
+use crate::semantic::{analyze_program};
 
 pub fn compile(code: &str) -> Result<(), String> {
     // 1. Prima chunker: divide il codice in pezzi
@@ -14,5 +15,6 @@ pub fn compile(code: &str) -> Result<(), String> {
     let ast = parse(tokens)?;
     println!("\n===== Stampo AST =====");
     println!("{:#?}", ast);
+    analyze_program(ast);
     Ok(())
 }

@@ -33,7 +33,29 @@ pub enum Expression {
     Float(f64),         // chill - numeri decimali
     StringLit(String),  // vibes - stringhe
     CharLit(char),      // Chad - carattere
-    Variable(String)    // nome di variabile
+    Variable(String),    // nome di variabile
+    BinOp {
+        left: Box<Expression>,
+        op: BinOp,
+        right: Box<Expression>
+    }
+}
+
+#[derive(Debug)]
+pub enum BinOp {
+    // Operatori aritmetici
+    Add,      // +
+    Sub,      // -
+    Mul,      // *
+    Div,      // /
+
+    // Operatori di comparazione
+    Equal,    // ==
+    NotEqual, // !=
+    Less,     // <
+    Greater,  // >
+    LessEq,   // <=
+    GreaterEq // >=
 }
 
 #[derive(Debug)]
