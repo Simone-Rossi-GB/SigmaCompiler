@@ -98,14 +98,11 @@ fn main() {
 
         // Esegui con QEMU se richiesto
         if should_execute {
-            println!("\n=== Esecuzione con QEMU ===");
+            println!("\n=== Esecuzione del programma ===");
             match execute_qemu(&executable_path) {
                 Ok(_) => {},
                 Err(err) => {
-                    eprintln!("\n✗ Errore durante l'esecuzione: {}", err);
-                    eprintln!("Suggerimento: Installa QEMU:");
-                    eprintln!("  - Windows: https://qemu.weilnetz.de/w64/");
-                    eprintln!("  - Linux: sudo apt install qemu-user");
+                    eprintln!("\n✗ Errore: {}", err);
                     process::exit(1);
                 }
             }
@@ -182,6 +179,10 @@ fn execute_qemu(executable: &str) -> Result<(), String> {
         }
     }
 
+    // Su macOS, QEMU user-mode non è disponibile nativamente
+    // spike richiede pk compilato per la stessa architettura (RV32/RV64)
+    // che al momento non è configurato correttamente
+
     // Su Windows, prova con WSL
     #[cfg(target_os = "windows")]
     {
@@ -224,13 +225,36 @@ fn execute_qemu(executable: &str) -> Result<(), String> {
         }
     }
 
-    Err(format!(
+    #[cfg(target_os = "macos")]
+    return Err(format!(
+        "Impossibile eseguire il programma.\n\
+        Su macOS, QEMU user-mode non è disponibile nativamente.\n\
+        Opzioni:\n\
+        1. Usa solo compilazione (senza -x)\n\
+        2. Installa spike + pk: brew install riscv-isa-sim riscv-pk\n\
+        3. Usa Docker/VM Linux con qemu-user"
+    ));
+
+    #[cfg(target_os = "windows")]
+    return Err(format!(
         "QEMU user-mode non trovato.\n\
         Su Windows, installa WSL e qemu-user:\n\
         1. wsl --install -d Ubuntu\n\
         2. wsl\n\
         3. sudo apt update && sudo apt install qemu-user"
-    ))
+    ));
+
+    #[cfg(target_os = "linux")]
+    return Err(format!(
+        "QEMU user-mode non trovato.\n\
+        Installa qemu-user:\n\
+        - Ubuntu/Debian: sudo apt install qemu-user\n\
+        - Fedora: sudo dnf install qemu-user\n\
+        - Arch: sudo pacman -S qemu-user"
+    ));
+
+    #[allow(unreachable_code)]
+    Err("Impossibile eseguire il programma.".to_string())
 }
 
 fn is_command_available(cmd: &str) -> bool {

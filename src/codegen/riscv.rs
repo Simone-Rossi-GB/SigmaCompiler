@@ -44,22 +44,33 @@ fn generate_function(output: &mut String, ctx: &mut CodeGenContext, func: &Funct
     // Contiamo quante variabili locali vi sono
     let local_count = count_local_vars(&func.body);
     let param_count = func.parameters.len();
-    let total_stack = (local_count + param_count) * 4 + 4; // aggiungiamo 4 per il ra
+
+    // Calcola spazio necessario:
+    // - 4 byte per ogni variabile locale e parametro
+    // - 4 byte per il return address (ra)
+    // - Padding extra per temporanei durante valutazione espressioni
+    //   (le espressioni binarie usano stack per temporanei)
+    let max_expr_depth = estimate_max_expression_depth(&func.body);
+    let temp_space = max_expr_depth * 4;
+    let total_stack = (local_count + param_count) * 4 + 4 + temp_space;
 
     // prologo della funzione in risc-v
+    // Usiamo s0 come frame pointer per accedere alle variabili
+    // anche quando sp viene modificato per temporanei
 
     output.push_str("   # Prologo \n");
     if total_stack > 0 {
         output.push_str(&format!("  addi sp, sp, -{}\n", total_stack));
     }
-    output.push_str(&format!("  sw ra, {}(sp)\n", total_stack - 4));
+    output.push_str("  mv s0, sp       # s0 = frame pointer\n");
+    output.push_str(&format!("  sw ra, {}(s0)\n", total_stack - 4));
 
     // salviamo i parametri nello stack
 
     for (i, param) in func.parameters.iter().enumerate() {
         let offset = ctx.allocate_variable(param.name.clone(), param.parameter_type.clone());
         let reg = format!("a{}", i);
-        output.push_str(&format!("   sw {}, {}(sp) # param {}\n", reg, offset, param.name));
+        output.push_str(&format!("   sw {}, {}(s0) # param {}\n", reg, offset, param.name));
     }
 
     // generiamo il body in risc-v
@@ -76,7 +87,7 @@ fn generate_function(output: &mut String, ctx: &mut CodeGenContext, func: &Funct
         output.push_str("  li a0, 0        # funzione ghost ritorna 0\n");
     }
 
-    output.push_str(&format!("  lw ra, {}(sp)\n", total_stack - 4));
+    output.push_str(&format!("  lw ra, {}(s0)\n", total_stack - 4));
     if total_stack > 0 {
         output.push_str(&format!("  addi sp, sp, {}\n", total_stack));
     }
@@ -103,8 +114,8 @@ fn generate_statement(output: &mut String, ctx: &mut CodeGenContext, stmt: &Stat
             // calcoliamo il valore (il risultato si troverà in a0)
             generate_expression(output, ctx, value)?;
 
-            // salviamo nello stack
-            output.push_str(&format!("  sw a0, {}(sp)   # salva in stack {}\n",
+            // salviamo nello stack (usa s0 come frame pointer)
+            output.push_str(&format!("  sw a0, {}(s0)   # salva in stack {}\n",
                                      offset, name));
             Ok(())
         },
@@ -119,8 +130,8 @@ fn generate_statement(output: &mut String, ctx: &mut CodeGenContext, stmt: &Stat
             // calcoliamo il nuovo valore
             generate_expression(output, ctx, value)?;
 
-            // salviamo il valore all'offset della variabile
-            output.push_str(&format!("  sw a0, {}(sp)   # {} =\n",
+            // salviamo il valore all'offset della variabile (usa s0)
+            output.push_str(&format!("  sw a0, {}(s0)   # {} =\n",
                                      offset, name));
             Ok(())
         },
@@ -323,7 +334,7 @@ fn generate_expression(output: &mut String, ctx: &mut CodeGenContext, expr: &Exp
         Expression::Variable(name) => {
             let offset = ctx.get_variable_offset(name)
                 .ok_or_else(|| format!("Variable '{}' not found", name))?;
-            output.push_str(&format!("  lw a0, {}(sp)   # load {}\n", offset, name));
+            output.push_str(&format!("  lw a0, {}(s0)   # load {}\n", offset, name));
             Ok(())
         },
         Expression::BinOp {left, op, right} => {
@@ -387,6 +398,52 @@ fn count_local_vars(stmts: &Vec<Statement>) -> usize {
     stmts.iter()
         .filter(|s| matches!(s, Statement::VarDecl { .. }))
         .count()
+}
+
+// Stima la profondità massima delle espressioni annidate
+// Ogni livello di BinOp richiede 4 byte sullo stack per temporanei
+fn estimate_max_expression_depth(stmts: &Vec<Statement>) -> usize {
+    let mut max_depth = 0;
+    for stmt in stmts {
+        let depth = statement_expr_depth(stmt);
+        if depth > max_depth {
+            max_depth = depth;
+        }
+    }
+    // Aggiungi un buffer di sicurezza
+    max_depth + 4
+}
+
+fn statement_expr_depth(stmt: &Statement) -> usize {
+    match stmt {
+        Statement::VarDecl { value, .. } => expr_depth(value),
+        Statement::Assignment { value, .. } => expr_depth(value),
+        Statement::Print { expr } => expr_depth(expr),
+        Statement::Return { expr: Some(e) } => expr_depth(e),
+        Statement::If { condition, then_body, else_body } => {
+            let cond_depth = expr_depth(condition);
+            let then_depth = then_body.iter().map(|s| statement_expr_depth(s)).max().unwrap_or(0);
+            let else_depth = else_body.as_ref()
+                .map(|blk| blk.iter().map(|s| statement_expr_depth(s)).max().unwrap_or(0))
+                .unwrap_or(0);
+            cond_depth.max(then_depth).max(else_depth)
+        }
+        Statement::While { condition, body } => {
+            let cond_depth = expr_depth(condition);
+            let body_depth = body.iter().map(|s| statement_expr_depth(s)).max().unwrap_or(0);
+            cond_depth.max(body_depth)
+        }
+        _ => 0
+    }
+}
+
+fn expr_depth(expr: &Expression) -> usize {
+    match expr {
+        Expression::BinOp { left, right, .. } => {
+            1 + expr_depth(left).max(expr_depth(right))
+        }
+        _ => 0
+    }
 }
 
 fn generate_helpers(output: &mut String) {
@@ -459,7 +516,7 @@ fn generate_helpers(output: &mut String) {
     output.push_str("   li   a0, 1          # stdout\n");
     output.push_str("   li   a7, 64         # syscall write\n");
     output.push_str("   ecall\n");
-    output.push_str("   # stampo anche il newline diocane\n");
+    output.push_str("   # stampo anche il newline\n");
     output.push_str("   li   a0, 1\n");
     output.push_str("   la   a1, .Lnewline\n");
     output.push_str("   li   a2, 1\n");
@@ -499,13 +556,16 @@ fn generate_entry_point(output: &mut String) {
 }
 
 fn generate_data_section(output: &mut String, ctx: &mut CodeGenContext, ast: &Program) -> Result<(), String> {
-    if !ctx.string_literals.is_empty() {
-        output.push_str("\n.data\n");
-        for (i, s) in ctx.string_literals.iter().enumerate() {
-            output.push_str(&format!("str_{}: .asciz \"{}\"\n", i, s));
-        }
-        // salvo la label per lo a capo \n
-        output.push_str(".Lnewline: .byte 10\n\n");
+    // Genera sempre la sezione .data perché le funzioni print_int e print_string usano .Lnewline
+    output.push_str("\n.data\n");
+
+    // Stringhe letterali (se presenti)
+    for (i, s) in ctx.string_literals.iter().enumerate() {
+        output.push_str(&format!("str_{}: .asciz \"{}\"\n", i, s));
     }
+
+    // Label per il newline (sempre necessaria per print_int e print_string)
+    output.push_str(".Lnewline: .asciz \"\n\" \n");
+
     Ok(())
 }

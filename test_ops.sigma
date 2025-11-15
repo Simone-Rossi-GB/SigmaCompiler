@@ -1,0 +1,8 @@
+bussin based sigma() {
+    based x slay 5 + 3 * 2;
+    based y slay 10 - 4 / 2;
+    based bigger slay x > y;
+    based equal slay x == 10;
+    flex x;
+    yeet x;
+}

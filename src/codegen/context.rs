@@ -35,11 +35,13 @@ impl CodeGenContext {
     }
     
     // funzione creata per allocare una variabile sullo stack
+    // Ritorna offset POSITIVO dall'inizio del frame (dopo il prologo)
     pub fn allocate_variable(&mut self, name: String, var_type: Type) -> i32 {
-        self.stack_offset -= 4; // sottraggo 4 che è la grandezza di una word in riscv32
-        self.variables.insert(name.clone(), self.stack_offset);
+        let offset = self.stack_offset;
+        self.stack_offset += 4; // incremento 4 che è la grandezza di una word in riscv32
+        self.variables.insert(name.clone(), offset);
         self.variable_types.insert(name, var_type);
-        self.stack_offset
+        offset
     }
 
     pub fn get_variable_offset(&mut self, name: &str) -> Option<i32> {

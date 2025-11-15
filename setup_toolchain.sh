@@ -60,7 +60,9 @@ case $choice in
                 exit 1
             fi
             brew tap riscv/riscv
-            brew install riscv-tools
+            brew install riscv-gnu-toolchain
+            echo "Creo i symlink necessari..."
+            brew link riscv-gnu-toolchain
         fi
         echo ""
         echo "✓ Installazione completata!"
@@ -113,11 +115,16 @@ case $choice in
         elif [[ "$OS" == "mac" ]]; then
             if command -v brew &> /dev/null; then
                 brew tap riscv/riscv
-                brew install riscv-tools qemu
+                brew install riscv-gnu-toolchain qemu
+                echo "Creo i symlink necessari..."
+                brew link riscv-gnu-toolchain
             fi
         fi
         echo ""
         echo "✓ Installazione completata!"
+        echo ""
+        echo "NOTA (macOS): L'esecuzione con -x non è supportata nativamente."
+        echo "Usa la compilazione senza -x per generare file eseguibili RISC-V."
         ;;
 
     4)

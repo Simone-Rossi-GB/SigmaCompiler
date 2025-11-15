@@ -1,0 +1,402 @@
+=============================================================================
+  CONVERSIONE CODICE RISC-V RV32IM → RARS (RISC-V Assembler and Runtime Simulator)
+=============================================================================
+
+Il compilatore Sigma genera codice RISC-V RV32IM bare-metal per Linux.
+Per eseguirlo in RARS (simulatore educativo), sono necessarie alcune modifiche.
+
+=============================================================================
+DIFFERENZE PRINCIPALI TRA BARE-METAL E RARS
+=============================================================================
+
+1. SYSCALL NUMBERS (Numeri delle system call)
+   ---------------------------------------------------------------
+   Operazione          | Bare-Metal Linux | RARS
+   ---------------------------------------------------------------
+   Print intero        | 64 (write)       | 1 (PrintInt)
+   Print stringa       | 64 (write)       | 4 (PrintString)
+   Print carattere     | 64 (write)       | 11 (PrintChar)
+   Print newline       | 64 (write)       | 11 (PrintChar con a0=10)
+   Exit                | 93               | 10
+
+   ⚠️ IMPORTANTE: Il compilatore Sigma usa SEMPRE syscall 64 (write)
+   anche per stampare il newline '\n'. In RARS devi convertire a PrintChar!
+
+2. CONVENZIONI SYSCALL
+   -----------------------------------------------
+   Linux write (a7=64):      RARS PrintInt (a7=1):
+   - a0 = file descriptor    - a0 = valore intero
+   - a1 = buffer
+   - a2 = lunghezza          RARS PrintString (a7=4):
+   - ecall                   - a0 = indirizzo stringa
+
+                             RARS PrintChar (a7=11):
+                             - a0 = carattere ASCII
+                             - ecall
+
+3. ENTRY POINT
+   -----------------------------------------------
+   Bare-Metal:               RARS:
+   .global _start            .globl main
+   _start:                   main:
+
+4. .Lnewline vs PrintChar
+   -----------------------------------------------
+   Bare-Metal usa una label .data per '\n':
+
+   .data
+   .Lnewline: .byte 10
+
+   Poi stampa con:
+   li a0, 1           # stdout
+   la a1, .Lnewline   # indirizzo
+   li a2, 1           # lunghezza
+   li a7, 64          # write
+   ecall
+
+   RARS stampa direttamente:
+   li a0, 10          # carattere '\n'
+   li a7, 11          # PrintChar
+   ecall
+
+=============================================================================
+PROCEDURA DI CONVERSIONE
+=============================================================================
+
+STEP 1: Modifica l'entry point
+-------------------------------
+SOSTITUISCI:
+  .global _start
+  _start:
+      call sigma
+      li a7, 93
+      ecall
+
+CON:
+  .globl main
+  main:
+      call sigma
+      # Exit con codice in a0
+      li a7, 10      # syscall Exit
+      ecall
+
+STEP 2: Modifica print_int
+---------------------------
+NOTA IMPORTANTE: Il compilatore Sigma genera questo codice per newline:
+  li a0, 1           # stdout
+  la a1, .Lnewline   # indirizzo del byte '\n'
+  li a2, 1           # lunghezza
+  li a7, 64          # syscall write
+  ecall
+
+In RARS NON ESISTE syscall write (64)! Devi convertire a PrintChar (11):
+
+SOSTITUISCI tutta la funzione print_int CON:
+  print_int:
+      # In RARS, PrintInt stampa direttamente il valore in a0
+      li a7, 1       # syscall PrintInt
+      ecall
+
+      # Stampa newline (IMPORTANTE: usa PrintChar, NON write!)
+      li a0, 10      # '\n' ASCII code
+      li a7, 11      # syscall PrintChar
+      ecall
+      ret
+
+STEP 3: Modifica print_string
+------------------------------
+ANCHE print_string usa syscall write (64) per il newline!
+
+SOSTITUISCI tutta la funzione print_string CON:
+  print_string:
+      # In RARS, PrintString prende indirizzo in a0
+      # (a0 contiene già l'indirizzo della stringa)
+      li a7, 4       # syscall PrintString
+      ecall
+
+      # Stampa newline (IMPORTANTE: usa PrintChar, NON write!)
+      li a0, 10      # '\n' ASCII code
+      li a7, 11      # syscall PrintChar
+      ecall
+      ret
+
+STEP 4: Rimuovi/Commenta .Lnewline (opzionale)
+----------------------------------------------
+Nella sezione .data, puoi commentare o rimuovere:
+  # .Lnewline: .byte 10
+
+(Non è più necessario perché usiamo PrintChar)
+
+=============================================================================
+ESEMPIO COMPLETO - CONVERSIONE DI test_ops.sigma
+=============================================================================
+
+FILE ORIGINALE: test_ops.sigma.s (generato dal compilatore)
+------------------------------------------------------------
+
+# Generato da Sigma Manny Compiler
+# Target: RISC-V RV32IM Linux
+
+.text
+.global _start
+
+_start:
+    call sigma
+    li a7, 93
+    ecall
+
+print_int:
+    addi sp, sp, -20
+    mv t0, sp
+    li t1, 10
+    # ... (codice lungo per convertire int a stringa)
+    li a7, 64      # write syscall
+    ecall
+    # ... resto del codice
+    ret
+
+# Funzione sigma
+sigma:
+    # Prologo
+    addi sp, sp, -44
+    mv s0, sp
+    sw ra, 40(s0)
+    # ... corpo della funzione
+    ret
+
+.data
+.Lnewline: .byte 10
+
+
+FILE CONVERTITO: test_ops_rars.s (per RARS)
+------------------------------------------------------------
+
+# Generato da Sigma Manny Compiler - CONVERTITO PER RARS
+# Target: RISC-V RV32IM RARS Simulator
+
+.text
+.globl main
+
+main:
+    call sigma
+    # Exit con codice in a0
+    li a7, 10      # syscall Exit
+    ecall
+
+# Helper: stampa numero intero (VERSIONE RARS)
+print_int:
+    # RARS PrintInt: stampa valore in a0
+    li a7, 1       # syscall PrintInt
+    ecall
+
+    # Stampa newline
+    li a0, 10      # '\n'
+    li a7, 11      # syscall PrintChar
+    ecall
+    ret
+
+# Helper: stampa stringa (VERSIONE RARS)
+print_string:
+    # RARS PrintString: indirizzo stringa già in a0
+    li a7, 4       # syscall PrintString
+    ecall
+
+    # Stampa newline
+    li a0, 10      # '\n'
+    li a7, 11      # syscall PrintChar
+    ecall
+    ret
+
+# Funzione sigma (NESSUNA MODIFICA NECESSARIA)
+sigma:
+    # Prologo
+    addi sp, sp, -44
+    mv s0, sp
+    sw s0, 40(s0)
+
+    # VarDecl: based x
+    li a0, 5
+    addi sp, sp, -4
+    sw a0, 0(sp)
+    li a0, 3
+    addi sp, sp, -4
+    sw a0, 0(sp)
+    li a0, 2
+    lw a1, 0(sp)
+    addi sp, sp, 4
+    mul a0, a1, a0
+    lw a1, 0(sp)
+    addi sp, sp, 4
+    add a0, a1, a0
+    sw a0, 0(s0)
+
+    # VarDecl: based y
+    li a0, 10
+    addi sp, sp, -4
+    sw a0, 0(sp)
+    li a0, 4
+    addi sp, sp, -4
+    sw a0, 0(sp)
+    li a0, 2
+    lw a1, 0(sp)
+    addi sp, sp, 4
+    div a0, a1, a0
+    lw a1, 0(sp)
+    addi sp, sp, 4
+    sub a0, a1, a0
+    sw a0, 4(s0)
+
+    # VarDecl: based bigger
+    lw a0, 0(s0)   # load x
+    addi sp, sp, -4
+    sw a0, 0(sp)
+    lw a0, 4(s0)   # load y
+    lw a1, 0(sp)
+    addi sp, sp, 4
+    slt a0, a0, a1
+    sw a0, 8(s0)
+
+    # VarDecl: based equal
+    lw a0, 0(s0)   # load x
+    addi sp, sp, -4
+    sw a0, 0(sp)
+    li a0, 10
+    lw a1, 0(sp)
+    addi sp, sp, 4
+    sub a0, a1, a0
+    seqz a0, a0
+    sw a0, 12(s0)
+
+    # Print
+    lw a0, 0(s0)   # load x (valore = 11)
+    call print_int
+
+    # Return
+    lw a0, 0(s0)   # load x
+    # Epilogo
+    lw ra, 40(s0)
+    addi sp, sp, 44
+    ret
+
+.data
+str_0: .asciz "Hello from Sigma!"
+
+=============================================================================
+SCRIPT BASH PER CONVERSIONE AUTOMATICA
+=============================================================================
+
+Salva questo script come 'convert_to_rars.sh' e rendilo eseguibile:
+
+#!/bin/bash
+# Convert Sigma RISC-V code to RARS format
+
+if [ $# -eq 0 ]; then
+    echo "Usage: ./convert_to_rars.sh <input.s>"
+    exit 1
+fi
+
+INPUT="$1"
+OUTPUT="${INPUT%.s}_rars.s"
+
+echo "Converting $INPUT to RARS format..."
+
+# Crea il file di output
+cat > "$OUTPUT" << 'RARS_HEADER'
+# Convertito per RARS (RISC-V Assembler and Runtime Simulator)
+.text
+.globl main
+
+main:
+    call sigma
+    # Exit
+    li a7, 10
+    ecall
+
+# Helper: stampa intero (RARS)
+print_int:
+    li a7, 1       # PrintInt
+    ecall
+    li a0, 10      # newline
+    li a7, 11      # PrintChar
+    ecall
+    ret
+
+# Helper: stampa stringa (RARS)
+print_string:
+    li a7, 4       # PrintString
+    ecall
+    li a0, 10      # newline
+    li a7, 11      # PrintChar
+    ecall
+    ret
+
+RARS_HEADER
+
+# Estrai solo la funzione sigma e la sezione .data
+sed -n '/^# Funzione sigma/,/^\.data/p' "$INPUT" | head -n -1 >> "$OUTPUT"
+
+# Aggiungi sezione .data
+echo "" >> "$OUTPUT"
+sed -n '/^\.data/,/^$/p' "$INPUT" >> "$OUTPUT"
+
+echo "✓ File convertito: $OUTPUT"
+echo "Apri in RARS: https://github.com/TheThirdOne/rars"
+
+=============================================================================
+COME ESEGUIRE IN RARS
+=============================================================================
+
+1. SCARICA RARS
+   - Windows/Mac/Linux: https://github.com/TheThirdOne/rars/releases
+   - Scarica il JAR: rars_XXXX.jar
+
+2. APRI IL FILE CONVERTITO
+   java -jar rars_XXXX.jar
+   File → Open → Seleziona test_ops_rars.s
+
+3. ASSEMBLA ED ESEGUI
+   - Clicca "Assemble" (o F3)
+   - Clicca "Run" (o F5)
+   - Vedi l'output nella console
+
+4. DEBUG
+   - Usa "Step" (F7) per eseguire un'istruzione alla volta
+   - Guarda i registri nel pannello "Registers"
+   - Guarda lo stack nel pannello "Data Segment"
+
+=============================================================================
+SYSCALL RARS COMUNI
+=============================================================================
+
+a7  | Nome          | Argomenti           | Descrizione
+----|---------------|---------------------|---------------------------
+1   | PrintInt      | a0 = int            | Stampa intero
+2   | PrintFloat    | fa0 = float         | Stampa float
+3   | PrintDouble   | fa0 = double        | Stampa double
+4   | PrintString   | a0 = indirizzo      | Stampa stringa null-term
+5   | ReadInt       | -                   | Leggi intero (ret in a0)
+8   | ReadString    | a0=buf, a1=len      | Leggi stringa
+9   | Sbrk          | a0 = bytes          | Alloca memoria (ret in a0)
+10  | Exit          | -                   | Termina programma
+11  | PrintChar     | a0 = char           | Stampa carattere
+17  | Exit2         | a0 = exit_code      | Exit con codice
+
+=============================================================================
+RIFERIMENTI
+=============================================================================
+
+- RARS Download: https://github.com/TheThirdOne/rars/releases
+- RARS Help: Help → Help (dentro RARS)
+- RISC-V Reference: https://riscv.org/technical/specifications/
+- Syscall List: Help → Syscalls (dentro RARS)
+
+=============================================================================
+NOTE FINALI
+=============================================================================
+
+1. Il codice delle funzioni (sigma, ecc.) NON richiede modifiche
+2. Solo i wrapper print_* e l'entry point devono essere modificati
+3. RARS è ottimo per il debug visuale dello stack e registri
+4. Per codice più complesso, considera di usare QEMU user-mode su Linux
+
+Buon testing! 🚀
