@@ -1,3 +1,5 @@
+use std::str::Chars;
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum Token {
     // Tipi di dato
@@ -31,7 +33,6 @@ pub enum Token {
 
     // Strutture di controllo
     SixSeven,   // for
-    Nah,        // else
     Ong,        // if
     Mewing,     // while
     Ohio,       // break
@@ -47,6 +48,7 @@ pub enum Token {
     // Identificatori e letterali
     Rizz(String),      // identifier/variable name
     IntLit(i64),       // numero intero
+    FloatLit(f64),     // numero decimale
     StringLit(String), // stringa
     CharLit(char),
 
@@ -133,8 +135,6 @@ pub fn tokenizer(chunks: Vec<String>) -> Vec<Token> {
             tokens.push(Token::SixSeven)
         } else if chunk.eq("ong") {
             tokens.push(Token::Ong)
-        } else if chunk.eq("nah") {
-            tokens.push(Token::Nah)
         } else if chunk.eq("mewing") {
             tokens.push(Token::Mewing)
         } else if chunk.eq("ohio") {
@@ -162,9 +162,16 @@ pub fn tokenizer(chunks: Vec<String>) -> Vec<Token> {
         } else if chunk.eq(",") {
             tokens.push(Token::Comma)
 
-        // 3. Numeri (solo interi, float non supportati)
+        // 3. Numeri (prima prova float, poi int)
+        } else if chunk.contains('.') {
+            // Se contiene un punto, è un float
+            if let Ok(num) = chunk.parse::<f64>() {
+                tokens.push(Token::FloatLit(num))
+            } else {
+                tokens.push(Token::Unknown(chunk.clone()))
+            }
         } else if let Ok(num) = chunk.parse::<i64>() {
-            // è un intero bello grande
+            // Altrimenti è un intero
             tokens.push(Token::IntLit(num))
 
         // 4. Stringhe letterali (tra virgolette) (Vibes)

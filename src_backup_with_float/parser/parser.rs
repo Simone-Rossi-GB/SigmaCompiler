@@ -200,185 +200,6 @@ fn parse_return(tokens: &[Token], index: &mut usize) -> Result<Statement, String
     Ok(Statement::Return {expr})
 }
 
-// ==================== PARSING IF/WHILE/FOR (implementati da me diocristo) ====================
-
-// Parse if: ong (condition) { body } [nah { else_body }]
-fn parse_if(tokens: &[Token], index: &mut usize) -> Result<Statement, String> {
-    *index += 1;  // consuma 'ong'
-
-    // Aspettati '('
-    if !matches!(tokens[*index], Token::OpenParen) {
-        return Err("Expected '(' after 'ong'".to_string());
-    }
-    *index += 1;
-
-    // Parse condition
-    let condition = parse_expression(tokens, index)?;
-
-    // Aspettati ')'
-    if !matches!(tokens[*index], Token::CloseParen) {
-        return Err("Expected ')' after condition".to_string());
-    }
-    *index += 1;
-
-    // Aspettati '{'
-    if !matches!(tokens[*index], Token::OpenBrace) {
-        return Err("Expected '{' after condition".to_string());
-    }
-    *index += 1;
-
-    // Parse then body
-    let then_body = parse_body(tokens, index)?;
-
-    // Consuma '}'
-    if !matches!(tokens[*index], Token::CloseBrace) {
-        return Err("Expected '}' after then body".to_string());
-    }
-    *index += 1;
-
-    // Controlla se c'è 'nah' (else)
-    let else_body = if *index < tokens.len() && matches!(tokens[*index], Token::Nah) {
-        *index += 1;  // consuma 'nah'
-
-        // Aspettati '{'
-        if !matches!(tokens[*index], Token::OpenBrace) {
-            return Err("Expected '{' after 'nah'".to_string());
-        }
-        *index += 1;
-
-        // Parse else body
-        let body = parse_body(tokens, index)?;
-
-        // Consuma '}'
-        if !matches!(tokens[*index], Token::CloseBrace) {
-            return Err("Expected '}' after else body".to_string());
-        }
-        *index += 1;
-
-        Some(body)
-    } else {
-        None
-    };
-
-    Ok(Statement::If { condition, then_body, else_body })
-}
-
-// Parse while: mewing (condition) { body }
-fn parse_while(tokens: &[Token], index: &mut usize) -> Result<Statement, String> {
-    *index += 1;  // consuma 'mewing'
-
-    // Aspettati '('
-    if !matches!(tokens[*index], Token::OpenParen) {
-        return Err("Expected '(' after 'mewing'".to_string());
-    }
-    *index += 1;
-
-    // Parse condition
-    let condition = parse_expression(tokens, index)?;
-
-    // Aspettati ')'
-    if !matches!(tokens[*index], Token::CloseParen) {
-        return Err("Expected ')' after condition".to_string());
-    }
-    *index += 1;
-
-    // Aspettati '{'
-    if !matches!(tokens[*index], Token::OpenBrace) {
-        return Err("Expected '{' after condition".to_string());
-    }
-    *index += 1;
-
-    // Parse body
-    let body = parse_body(tokens, index)?;
-
-    // Consuma '}'
-    if !matches!(tokens[*index], Token::CloseBrace) {
-        return Err("Expected '}' after while body".to_string());
-    }
-    *index += 1;
-
-    Ok(Statement::While { condition, body })
-}
-
-// Parse for: sixSeven (init; condition; increment) { body }
-fn parse_for(tokens: &[Token], index: &mut usize) -> Result<Statement, String> {
-    *index += 1;  // consuma 'sixSeven'
-
-    // Aspettati '('
-    if !matches!(tokens[*index], Token::OpenParen) {
-        return Err("Expected '(' after 'sixSeven'".to_string());
-    }
-    *index += 1;
-
-    // Parse init (deve essere VarDecl o Assignment)
-    let init = match &tokens[*index] {
-        Token::Based | Token::SuperBased | Token::Chill | Token::Vibes | Token::Chad => {
-            parse_var_decl(tokens, index)?
-        },
-        Token::Rizz(_) => parse_assignment(tokens, index)?,
-        _ => return Err("Expected variable declaration or assignment in for init".to_string())
-    };
-
-    // Ora aspettati la condition
-    let condition = parse_expression(tokens, index)?;
-
-    // Aspettati ';'
-    if !matches!(tokens[*index], Token::Semicolon) {
-        return Err("Expected ';' after for condition".to_string());
-    }
-    *index += 1;
-
-    // Parse increment (deve essere Assignment, ma SENZA il ';' finale)
-    let increment = if let Token::Rizz(name) = &tokens[*index] {
-        let var_name = name.clone();
-        *index += 1;
-
-        // Aspettati 'slay'
-        if !matches!(tokens[*index], Token::Slay) {
-            return Err("Expected 'slay' in for increment".to_string());
-        }
-        *index += 1;
-
-        // Parse expression
-        let value = parse_expression(tokens, index)?;
-
-        Statement::Assignment {
-            name: var_name,
-            value
-        }
-    } else {
-        return Err("Expected assignment in for increment".to_string());
-    };
-
-    // Aspettati ')'
-    if !matches!(tokens[*index], Token::CloseParen) {
-        return Err("Expected ')' after for increment".to_string());
-    }
-    *index += 1;
-
-    // Aspettati '{'
-    if !matches!(tokens[*index], Token::OpenBrace) {
-        return Err("Expected '{' after for header".to_string());
-    }
-    *index += 1;
-
-    // Parse body
-    let body = parse_body(tokens, index)?;
-
-    // Consuma '}'
-    if !matches!(tokens[*index], Token::CloseBrace) {
-        return Err("Expected '}' after for body".to_string());
-    }
-    *index += 1;
-
-    Ok(Statement::For {
-        init: Box::new(init),
-        condition,
-        increment: Box::new(increment),
-        body
-    })
-}
-
 // Entry point per le espressioni - gestisce la precedenza più bassa
 fn parse_expression(tokens: &[Token], index: &mut usize) -> Result<Expression, String> {
     parse_comparison(tokens, index)
@@ -467,6 +288,7 @@ fn parse_primary(tokens: &[Token], index: &mut usize) -> Result<Expression, Stri
                 Expression::Long(*n)
             }
         }
+        Token::FloatLit(f) => Expression::Float(*f),
         Token::StringLit(s) => Expression::StringLit(s.clone()),
         Token::CharLit(c) => Expression::CharLit(*c),
         Token::Rizz(name) => Expression::Variable(name.clone()),
@@ -496,7 +318,7 @@ fn parse_body(tokens: &[Token], index: &mut usize) -> Result<Vec<Statement>, Str
 
     // Loop finché non incontriamo "}"
     while !matches!(tokens[*index], Token::CloseBrace) {
-        // Guarda che token è e decidi cosa fare (implementato da me sto cazzone di parser)
+        // Guarda che token è e decidi cosa fare
         let stmt = match &tokens[*index] {
             Token::Based | Token::SuperBased | Token::Chill | Token::Vibes | Token::Chad => parse_var_decl(tokens, index)?,
             Token::Flex => parse_print(tokens, index)?,
@@ -509,9 +331,6 @@ fn parse_body(tokens: &[Token], index: &mut usize) -> Result<Vec<Statement>, Str
                 Statement::Break
             }
             Token::Yeet => parse_return(tokens, index)?,
-            Token::Ong => parse_if(tokens, index)?,         // if (implementato da me diocane)
-            Token::Mewing => parse_while(tokens, index)?,   // while (anche questo l'ho fatto io)
-            Token::SixSeven => parse_for(tokens, index)?,   // for (pure questo è roba mia)
             Token::Rizz(_) => parse_assignment(tokens, index)?,
             _ => return Err(format!("Unexpected token in body: {:?}", tokens[*index]))
         };

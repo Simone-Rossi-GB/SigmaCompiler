@@ -1,3 +1,5 @@
+pub mod context;
 pub mod riscv;
 
-pub use riscv::generate_riscv;
+pub use context::*;
+pub use riscv::*;

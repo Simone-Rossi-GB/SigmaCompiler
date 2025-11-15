@@ -17,26 +17,7 @@ pub enum Statement {
     Assignment { name: String, value: Expression },
     Print { expr: Expression },
     Return { expr: Option<Expression> },
-    Break,  // ohio - esce dal loop
-
-    // Costrutti di controllo implementati da me porca puttana
-    If {
-        condition: Expression,         // condizione dell'if
-        then_body: Vec<Statement>,     // corpo del then
-        else_body: Option<Vec<Statement>>  // corpo dell'else (opzionale con nah)
-    },
-
-    While {
-        condition: Expression,         // condizione del while
-        body: Vec<Statement>          // corpo del while
-    },
-
-    For {
-        init: Box<Statement>,         // inizializzazione (es. based i slay 0)
-        condition: Expression,         // condizione (es. i < 10)
-        increment: Box<Statement>,    // incremento (es. i slay i + 1)
-        body: Vec<Statement>          // corpo del for
-    }
+    Break  // ohio - esce dal loop
 }
 
 #[derive(Debug)]
@@ -49,6 +30,7 @@ pub struct Parameter {
 pub enum Expression {
     Integer(i32),       // based - numeri interi piccoli
     Long(i64),          // superBased - numeri interi grandi
+    Float(f64),         // chill - numeri decimali
     StringLit(String),  // vibes - stringhe
     CharLit(char),      // Chad - carattere
     Variable(String),    // nome di variabile

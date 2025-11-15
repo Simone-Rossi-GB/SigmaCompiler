@@ -52,7 +52,7 @@ impl SymbolInfo {
     }
 }
 
-pub fn analyze_program(ast: &Program) -> Result<(), String> {
+pub fn analyze_program(ast: Program) -> Result<(), String> {
     let mut stm_table = SymbolTable::new();
     // scrivere l'analisi semantica
     for func in &ast.functions {
@@ -79,11 +79,6 @@ fn analyze_function(stm_tab: &mut SymbolTable, func: &Function) -> Result<(), St
 fn analyze_statement(stm_tab: &mut SymbolTable, stmt: &Statement, expected_return: &Type) -> Result<(), String>{
     match stmt {
         Statement::VarDecl {var_type, name, value} => {
-            // Float non supportato diocane
-            if var_type == &Type::Chill {
-                return Err("Float type (chill) not supported in this version".to_string());
-            }
-
             let expr_type = analyze_expression(stm_tab, value)?;
 
             if &expr_type != var_type {
@@ -135,57 +130,7 @@ fn analyze_statement(stm_tab: &mut SymbolTable, stmt: &Statement, expected_retur
         },
 
         Statement::Break => {
-            // gestione break (per ora ok, controllare se siamo in loop è opzionale)
-            Ok(())
-        },
-
-        // Costrutti implementati da me cazzo
-        Statement::If { condition, then_body, else_body } => {
-            // Analizza condizione
-            analyze_expression(stm_tab, condition)?;
-
-            // Analizza then body
-            for stmt in then_body {
-                analyze_statement(stm_tab, stmt, expected_return)?;
-            }
-
-            // Analizza else body se presente
-            if let Some(else_stmts) = else_body {
-                for stmt in else_stmts {
-                    analyze_statement(stm_tab, stmt, expected_return)?;
-                }
-            }
-
-            Ok(())
-        },
-
-        Statement::While { condition, body } => {
-            // Analizza condizione
-            analyze_expression(stm_tab, condition)?;
-
-            // Analizza body
-            for stmt in body {
-                analyze_statement(stm_tab, stmt, expected_return)?;
-            }
-
-            Ok(())
-        },
-
-        Statement::For { init, condition, increment, body } => {
-            // Analizza init
-            analyze_statement(stm_tab, init, expected_return)?;
-
-            // Analizza condition
-            analyze_expression(stm_tab, condition)?;
-
-            // Analizza body
-            for stmt in body {
-                analyze_statement(stm_tab, stmt, expected_return)?;
-            }
-
-            // Analizza increment
-            analyze_statement(stm_tab, increment, expected_return)?;
-
+            // gestire anche i break poi
             Ok(())
         }
     }
@@ -196,6 +141,7 @@ fn analyze_expression(stm_tab: &SymbolTable, expr: &Expression) -> Result<Type, 
     match expr {
         Expression::Integer(_) => Ok(Type::Based),
         Expression::Long(_) => Ok(Type::SuperBased),
+        Expression::Float(_) => Ok(Type::Chill),
         Expression::StringLit(_) => Ok(Type::Vibes),
         Expression::CharLit(_) => Ok(Type::Chad),
 
@@ -218,16 +164,16 @@ fn check_binary_op(left_type: &Type, op: &BinOp, right_type: &Type) -> Result<Ty
 
     match op {
         BinOp::Add | BinOp::Sub | BinOp::Mul | BinOp::Div => {
-            // Solo interi supportati (float rimosso porca puttana)
-            let is_left_numeric = matches!(left_type, Type::Based | Type::SuperBased);
-            let is_right_numeric = matches!(right_type, Type::Based | Type::SuperBased);
+            let is_left_numeric = matches!(left_type, Type::Based | Type::SuperBased | Type::Chill);
+            let is_right_numeric = matches!(right_type, Type::Based | Type::SuperBased | Type::Chill);
 
             if !is_left_numeric || !is_right_numeric {
                 return Err(format!("Invalid operation {:?}, between '{:?}' and '{:?}': both must be numeric types!", op, left_type, right_type));
             }
 
-            // Promozione tipo: SuperBased > Based
-            if left_type == &Type::SuperBased || right_type == &Type::SuperBased {
+            if left_type == &Type::Chill || right_type == &Type::Chill {
+                Ok(Type::Chill)
+            } else if left_type == &Type::SuperBased || right_type == &Type::SuperBased {
                 Ok(Type::SuperBased)
             } else {
                 Ok(Type::Based)
@@ -243,9 +189,8 @@ fn check_binary_op(left_type: &Type, op: &BinOp, right_type: &Type) -> Result<Ty
         },
 
         BinOp::Less | BinOp::Greater | BinOp::LessEq | BinOp::GreaterEq => {
-            // Solo interi per confronti numerici
-            let is_left_numeric = matches!(left_type, Type::Based | Type::SuperBased);
-            let is_right_numeric = matches!(right_type, Type::Based | Type::SuperBased);
+            let is_left_numeric = matches!(left_type, Type::Based | Type::SuperBased | Type::Chill);
+            let is_right_numeric = matches!(right_type, Type::Based | Type::SuperBased | Type::Chill);
 
             if !is_left_numeric || !is_right_numeric {
                 return Err(format!("Invalid comparison {:?}, between '{:?}' and '{:?}': both must be numeric types!", op, left_type, right_type));

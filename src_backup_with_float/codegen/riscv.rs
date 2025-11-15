@@ -36,10 +36,8 @@ fn generate_function(output: &mut String, ctx: &mut CodeGenContext, func: &Funct
     // Salva stato del contesto (ogni funzione ha scope separato)
     let saved_offset = ctx.stack_offset;
     let saved_vars = ctx.variables.clone();
-    let saved_types = ctx.variable_types.clone();
     ctx.stack_offset = 0;
     ctx.variables.clear();
-    ctx.variable_types.clear();
 
     // Contiamo quante variabili locali vi sono
     let local_count = count_local_vars(&func.body);
@@ -57,7 +55,7 @@ fn generate_function(output: &mut String, ctx: &mut CodeGenContext, func: &Funct
     // salviamo i parametri nello stack
 
     for (i, param) in func.parameters.iter().enumerate() {
-        let offset = ctx.allocate_variable(param.name.clone(), param.parameter_type.clone());
+        let offset = ctx.allocate_variable(param.name.clone());
         let reg = format!("a{}", i);
         output.push_str(&format!("   sw {}, {}(sp) # param {}\n", reg, offset, param.name));
     }
@@ -70,12 +68,6 @@ fn generate_function(output: &mut String, ctx: &mut CodeGenContext, func: &Funct
     // Epilogo della funzione in risc-v
 
     output.push_str("   # Epilogo\n");
-
-    // Se la funzione è ghost (void) e non ha return esplicito, imposta a0 = 0
-    if func.return_type == Type::Ghost {
-        output.push_str("  li a0, 0        # funzione ghost ritorna 0\n");
-    }
-
     output.push_str(&format!("  lw ra, {}(sp)\n", total_stack - 4));
     if total_stack > 0 {
         output.push_str(&format!("  addi sp, sp, {}\n", total_stack));
@@ -86,7 +78,6 @@ fn generate_function(output: &mut String, ctx: &mut CodeGenContext, func: &Funct
     // ripristo il contesto precedente
     ctx.stack_offset = saved_offset;
     ctx.variables = saved_vars;
-    ctx.variable_types = saved_types;
 
     Ok(())
 }
@@ -98,7 +89,7 @@ fn generate_statement(output: &mut String, ctx: &mut CodeGenContext, stmt: &Stat
                                     type_to_string(var_type), name));
 
             // allochiamo una bella variabile aahahaha
-            let offset = ctx.allocate_variable(name.clone(), var_type.clone());
+            let offset = ctx.allocate_variable(name.clone());
 
             // calcoliamo il valore (il risultato si troverà in a0)
             generate_expression(output, ctx, value)?;
@@ -140,161 +131,18 @@ fn generate_statement(output: &mut String, ctx: &mut CodeGenContext, stmt: &Stat
             Ok(())
         },
         Statement::Break => {
-            if let Some(end_label) = ctx.current_loop_end() {
-                output.push_str(&format!("   j    {}      # ohio (break)\n", end_label));
-                Ok(())
-            } else {
-                Err("Break fuori da un loop porcodio!".to_string())
-            }
+            // TODO: implementa loop
+            output.push_str("   # Break (TODO)\n");
+            Ok(())
         },
-
         Statement::Print { expr} => {
             output.push_str("   # Print\n");
 
             // calcoliamo l'espressione da stampare
             generate_expression(output, ctx, expr)?;
 
-            // chiamiamo l'helper appropriato in base al tipo
-            let should_print_string = match expr {
-                Expression::StringLit(_) => true,
-                Expression::Variable(name) => {
-                    // controlliamo il tipo della variabile
-                    if let Some(var_type) = ctx.get_variable_type(name) {
-                        matches!(var_type, Type::Vibes)
-                    } else {
-                        false
-                    }
-                },
-                _ => false,
-            };
-
-            if should_print_string {
-                output.push_str("   call print_string\n");
-            } else {
-                output.push_str("   call print_int\n");
-            }
-
-            Ok(())
-        },
-
-        Statement::If { condition, then_body, else_body } => {
-            // genero le label uniche per questo if
-            let else_label = ctx.generate_label(".Lelse");
-            let end_label = ctx.generate_label(".Lend_if");
-
-            output.push_str("   # If statement (ong)\n");
-
-            // valuto la condizione (risultato in a0)
-            generate_expression(output, ctx, condition)?;
-
-            // se a0 == 0 (falso) salto all'else
-            output.push_str(&format!("   beqz a0, {}\n", else_label));
-
-            // corpo del then
-            output.push_str("   # Then body\n");
-            for stmt in then_body {
-                generate_statement(output, ctx, stmt)?;
-            }
-
-            // salto alla fine dell'if (skippo l'else)
-            output.push_str(&format!("   j    {}\n", end_label));
-
-            // label else
-            output.push_str(&format!("{}:\n", else_label));
-
-            // corpo dell'else se c'è
-            if let Some(stmts) = else_body {
-                output.push_str("   # Else body (nah)\n");
-                for stmt in stmts {
-                    generate_statement(output, ctx, stmt)?;
-                }
-            }
-
-            // label fine if
-            output.push_str(&format!("{}:\n", end_label));
-
-            Ok(())
-        },
-
-        Statement::While { condition, body } => {
-            // genero le label uniche per questo while
-            let start_label = ctx.generate_label(".Lwhile_start");
-            let end_label = ctx.generate_label(".Lwhile_end");
-
-            // entro nel loop (per gestire break)
-            ctx.enter_loop(end_label.clone());
-
-            output.push_str("   # While loop (mewing)\n");
-
-            // label inizio loop
-            output.push_str(&format!("{}:\n", start_label));
-
-            // valuto la condizione
-            generate_expression(output, ctx, condition)?;
-
-            // se a0 == 0 (falso) esco dal loop
-            output.push_str(&format!("   beqz a0, {}\n", end_label));
-
-            // corpo del while
-            for stmt in body {
-                generate_statement(output, ctx, stmt)?;
-            }
-
-            // torno all'inizio del loop
-            output.push_str(&format!("   j    {}\n", start_label));
-
-            // label fine loop
-            output.push_str(&format!("{}:\n", end_label));
-
-            // esco dal loop stack
-            ctx.exit_loop();
-
-            Ok(())
-        },
-
-        Statement::For { init, condition, increment, body } => {
-            // genero le label uniche per questo for
-            let start_label = ctx.generate_label(".Lfor_start");
-            let end_label = ctx.generate_label(".Lfor_end");
-
-            output.push_str("   # For loop (sixSeven)\n");
-
-            // inizializzazione del for
-            output.push_str("   # Init\n");
-            generate_statement(output, ctx, init)?;
-
-            // entro nel loop
-            ctx.enter_loop(end_label.clone());
-
-            // label inizio loop
-            output.push_str(&format!("{}:\n", start_label));
-
-            // condizione
-            output.push_str("   # Condition\n");
-            generate_expression(output, ctx, condition)?;
-
-            // se falso esco
-            output.push_str(&format!("   beqz a0, {}\n", end_label));
-
-            // corpo del for
-            output.push_str("   # Body\n");
-            for stmt in body {
-                generate_statement(output, ctx, stmt)?;
-            }
-
-            // incremento
-            output.push_str("   # Increment\n");
-            generate_statement(output, ctx, increment)?;
-
-            // torno all'inizio
-            output.push_str(&format!("   j    {}\n", start_label));
-
-            // label fine loop
-            output.push_str(&format!("{}:\n", end_label));
-
-            // esco dal loop stack
-            ctx.exit_loop();
-
+            // chiamiamo l'helper per stampare
+            output.push_str("   call print_int\n");
             Ok(())
         }
     }
@@ -310,6 +158,10 @@ fn generate_expression(output: &mut String, ctx: &mut CodeGenContext, expr: &Exp
             // purtroppo in RV32 i registri sono a 32-bit quindi ci tocca troncare :(
             output.push_str(&format!("  li a0, {}\n", *n as i32));
             Ok(())
+        },
+        Expression::Float(_) => {
+            // Float richiede l'estensione F on RV32IM
+            Err("Float not supported yet".to_string())
         },
         Expression::CharLit(c) => {
             output.push_str(&format!("  li a0, {}\n", *c as i32));
@@ -436,36 +288,6 @@ fn generate_helpers(output: &mut String) {
     output.push_str("   li   a7, 64\n");
     output.push_str("   ecall\n");
     output.push_str("   addi sp, sp, 20\n");
-    output.push_str("   ret\n\n");
-
-    // Helper per stampare stringhe (implementato da me diocristo)
-    output.push_str("# Stampa stringa (vibes) in a0 (implementato da me porca puttana)\n");
-    output.push_str("print_string:\n");
-    output.push_str("   addi sp, sp, -4\n");
-    output.push_str("   sw   a0, 0(sp)      # salvo l'indirizzo originale\n");
-    output.push_str("   # calcolo la lunghezza della stringa\n");
-    output.push_str("   mv   t0, a0         # t0 = puntatore stringa\n");
-    output.push_str("   li   t1, 0          # t1 = contatore lunghezza\n");
-    output.push_str(".Lstrlen_loop:\n");
-    output.push_str("   lb   t2, 0(t0)      # carico byte corrente\n");
-    output.push_str("   beqz t2, .Lstr_write # se '\0' (null terminator) stampa\n");
-    output.push_str("   addi t0, t0, 1      # vado al prossimo carattere\n");
-    output.push_str("   addi t1, t1, 1      # incremento il contatore\n");
-    output.push_str("   j    .Lstrlen_loop  # continuo il loop dio boia\n");
-    output.push_str(".Lstr_write:\n");
-    output.push_str("   # ora faccio la syscall write(1, indirizzo, lunghezza)\n");
-    output.push_str("   lw   a1, 0(sp)      # ripristino indirizzo originale in a1\n");
-    output.push_str("   mv   a2, t1         # lunghezza in a2\n");
-    output.push_str("   li   a0, 1          # stdout\n");
-    output.push_str("   li   a7, 64         # syscall write\n");
-    output.push_str("   ecall\n");
-    output.push_str("   # stampo anche il newline diocane\n");
-    output.push_str("   li   a0, 1\n");
-    output.push_str("   la   a1, .Lnewline\n");
-    output.push_str("   li   a2, 1\n");
-    output.push_str("   li   a7, 64\n");
-    output.push_str("   ecall\n");
-    output.push_str("   addi sp, sp, 4      # ripristino stack\n");
     output.push_str("   ret\n\n");
 }
 
