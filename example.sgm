@@ -1,0 +1,51 @@
+bussin ghost sigma() {
+    vibes title slay "=== Sigma Compiler Demo ===";
+    flex title;
+
+    vibes msg1 slay "Test 1: Variabili e Operazioni";
+    flex msg1;
+
+    based x slay 10;
+    based y slay 5;
+    based sum slay x + y;
+    based diff slay x - y;
+    based prod slay x * y;
+    based quot slay x / y;
+
+    flex sum;
+    flex diff;
+    flex prod;
+    flex quot;
+
+    vibes msg2 slay "Test 2: If/Else";
+    flex msg2;
+
+    ong (x > y) {
+        vibes greater slay "x e' maggiore di y";
+        flex greater;
+    } nah {
+        vibes less slay "x e' minore o uguale a y";
+        flex less;
+    }
+
+    vibes msg3 slay "Test 3: While Loop";
+    flex msg3;
+
+    based counter slay 0;
+    mewing (counter < 3) {
+        flex counter;
+        counter slay counter + 1;
+    }
+
+    vibes msg4 slay "Test 4: For Loop - Somma da 1 a 10";
+    flex msg4;
+
+    based total slay 0;
+    sixSeven (based i slay 1; i <= 10; i slay i + 1) {
+        total slay total + i;
+    }
+    flex total;
+
+    vibes done slay "=== Fine Demo ===";
+    flex done;
+}

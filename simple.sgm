@@ -1,0 +1,10 @@
+bussin ghost sigma() {
+    vibes msg slay "Hello World!";
+    flex msg;
+
+    based x slay 42;
+    flex x;
+
+    based y slay x + 10;
+    flex y;
+}

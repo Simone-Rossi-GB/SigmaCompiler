@@ -1,0 +1,40 @@
+bussin ghost sigma() {
+    vibes msg slay "=== Sigma Compiler Test ===";
+    flex msg;
+
+    based counter slay 0;
+
+    mewing (counter < 5) {
+        flex counter;
+        counter slay counter + 1;
+    }
+
+    vibes loop_msg slay "For loop da 1 a 10:";
+    flex loop_msg;
+
+    sixSeven (based i slay 1; i <= 10; i slay i + 1) {
+        flex i;
+    }
+
+    based numero slay 15;
+
+    ong (numero > 10) {
+        vibes big slay "Numero grande!";
+        flex big;
+    } nah {
+        vibes small slay "Numero piccolo!";
+        flex small;
+    }
+
+    based somma slay 0;
+    sixSeven (based j slay 1; j <= 100; j slay j + 1) {
+        somma slay somma + j;
+    }
+
+    vibes result slay "Somma da 1 a 100:";
+    flex result;
+    flex somma;
+
+    vibes done slay "Compilazione completata!";
+    flex done;
+}
